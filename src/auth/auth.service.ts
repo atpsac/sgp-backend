@@ -8,6 +8,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { UserWithRolesResult } from './interfaces/user-with-roles.interface';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -15,11 +16,47 @@ export class AuthService {
     constructor(
         private readonly drizzleService: DrizzleService,
         private readonly jwtService: JwtService,
+        private configService: ConfigService,
     ) { }
 
     async createUser() {
 
     }
+
+    async getTokens(payload: JwtPayload) {
+        const [accessToken, refreshToken] = await Promise.all([
+            this.jwtService.signAsync(
+                { sub: payload },
+                {
+                    secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+                    expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION') || "1m",
+                },
+            ),
+            this.jwtService.signAsync(
+                { sub: payload },
+                {
+                    secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+                    expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION') || "2m",
+                },
+            ),
+        ]);
+        return { accessToken, refreshToken };
+    }
+
+    private getJwtToken(payload: JwtPayload) {
+
+        const token = this.jwtService.sign(payload);
+        return token;
+    }
+
+    async updateRefreshTokenHash(userId: number, refreshToken: string) {
+        const hash = await bcrypt.hash(refreshToken, 12);
+        await this.drizzleService.db
+            .update(users)
+            .set({ refreshToken: hash })
+            .where(eq(users.id, userId));
+    }
+
 
     async login(loginUserDto: LoginUserDto) {
 
@@ -55,24 +92,22 @@ export class AuthService {
             .limit(1);
 
         if (!user)
-            throw new UnauthorizedException('Credentials are not valid (email)');
+            throw new UnauthorizedException('Credenciales no válidas');
 
         if (!bcrypt.compareSync(password, user.password))
-            throw new UnauthorizedException('Credentials are not valid (password)');
+            throw new UnauthorizedException('Credenciales no válidas');
 
         const { password: rawPass, ...userWithoutPassword } = user;
 
+        const tokens = await this.getTokens({ id: user.id });
+
         return {
             ...userWithoutPassword,
-            token: this.getJwtToken({ id: user.id })
+            //token: this.getJwtToken({ id: user.id })
+            access_token: tokens.accessToken,
+            refresh_token: tokens.refreshToken,
         };
 
-    }
-
-    private getJwtToken(payload: JwtPayload) {
-
-        const token = this.jwtService.sign(payload);
-        return token;
     }
 
     // async getUserWithRolesAndPermissions(userId: number) {
@@ -110,6 +145,7 @@ export class AuthService {
 
     async getUserWithRolesAndPermissions(userId: number): Promise<UserWithRolesResult> {
         // Validación 1: ID válido (en aplicación)
+
         this.validateUserId(userId);
 
         // Validación 2: Usuario existe y está activo (en aplicación)
@@ -127,6 +163,7 @@ export class AuthService {
     }
 
     private validateUserId(userId: number): void {
+    
         if (!userId || userId <= 0 || !Number.isInteger(userId)) {
             throw new BadRequestException('ID de usuario inválido');
         }
@@ -160,7 +197,7 @@ export class AuthService {
             // Ejecutar la función PostgreSQL
             const result = await this.drizzleService.db.execute(sql
                 `
-                            SELECT * FROM get_user_with_roles_permissions(${userId})         
+                            SELECT * FROM get_user_roles_data(${userId})         
                             `);
 
             return result.rows[0] as UserWithRolesResult || null;

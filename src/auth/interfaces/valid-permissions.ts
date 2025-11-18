@@ -1,8 +1,8 @@
 export enum ValidPermissions {
-    create = 'create',
-    read = 'read',
-    update = 'uodate',
-    delete = 'delete',
-    print = 'print',
-    manage = 'manage',
+    create = 'crear',
+    read = 'lectura',
+    update = 'actualizar',
+    delete = 'eliminar',
+    print = 'imprimir',
+    manage = 'administrar',
 }

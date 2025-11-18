@@ -19,19 +19,21 @@ export class AuthController {
 
     @Get('users/:id')
     @RoleProtected(ValidRoles.superAdmin)
-    @PermissionProtected(ValidPermissions.print)
+    @PermissionProtected(ValidPermissions.read)
     @UseGuards(AuthGuard(),UserRolePermissionGuard)
-    getUserRolesPermissions(@Param('id') id: number){
-        return this.authService.getUserWithRolesAndPermissions(id);
+
+    async getUserRolesPermissions(@Param('id', ParseIntPipe) id: number){
+        return await this.authService.getUserWithRolesAndPermissions(id);
     }
 
     @Get('users')
-    @RoleProtected()
-    @PermissionProtected()
+    @RoleProtected(ValidRoles.user)
+    @PermissionProtected(ValidPermissions.read)
     @UseGuards(AuthGuard(),UserRolePermissionGuard)
     getAllUsers() {
         return {
-            message :"hello world"
+            message :"Hola Patroclo"
         }
     }
+
 }

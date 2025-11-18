@@ -18,9 +18,9 @@ import { JwtModule } from '@nestjs/jwt';
         // console.log('JWT Secret', configService.get('JWT_SECRET') )
         // console.log('JWT SECRET', process.env.JWT_SECRET)
         return {
-          secret: configService.get('JWT_SECRET'),
+          secret: configService.get('JWT_ACCESS_SECRET'),
           signOptions: {
-            expiresIn: configService.get('JWT_EXPIRATION')
+            expiresIn: configService.get('JWT_ACCESS_EXPIRATION')
           }
         }
       }

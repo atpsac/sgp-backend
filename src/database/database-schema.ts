@@ -1,6 +1,7 @@
-import { pgTable, unique, integer, varchar, timestamp, boolean, foreignKey, numeric, index, text, char, date, primaryKey, pgSequence } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
+import { pgTable, index, unique, check, integer, varchar, timestamp, boolean, foreignKey, date, text, char, numeric, primaryKey, pgSequence } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm/relations";
+
 
 export const usersIdSeq = pgSequence("users_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
 export const rolesIdSeq = pgSequence("roles_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
@@ -31,93 +32,6 @@ export const trailersIdSeq = pgSequence("trailers_id_seq", {  startWith: "1", in
 export const licenseTypesIdSeq = pgSequence("license_types_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
 export const scaleTicketStatusIdSeq = pgSequence("scale_ticket_status_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
 
-export const identityDocumentTypes = pgTable("identity_document_types", {
-	id: integer().default(sql`nextval('identity_document_types_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	code: varchar({ length: 10 }).notNull(),
-	description: varchar({ length: 250 }).notNull(),
-	length: integer().notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("identity_document_types_name_unq").on(table.name),
-	unique("identity_document_types_code_unq").on(table.code),
-]);
-
-export const department = pgTable("department", {
-	id: integer().default(sql`nextval('department_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 100 }).notNull(),
-	description: varchar({ length: 255 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("department_name_unq").on(table.name),
-]);
-
-export const gender = pgTable("gender", {
-	id: integer().default(sql`nextval('gender_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	description: varchar({ length: 255 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("gender_name_unq").on(table.name),
-]);
-
-export const scales = pgTable("scales", {
-	id: integer().default(sql`nextval('scales_id_seq'::regclass)`).primaryKey().notNull(),
-	idBuyingStations: integer("id_buying_stations").notNull(),
-	idScaleTypes: integer("id_scale_types").notNull(),
-	idScaleStatus: integer("id_scale_status").notNull(),
-	brand: varchar({ length: 50 }).notNull(),
-	model: varchar({ length: 50 }).notNull(),
-	serialNumber: varchar("serial_number", { length: 50 }).notNull(),
-	maxCapacity: numeric("max_capacity", { precision: 8, scale:  2 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idBuyingStations],
-			foreignColumns: [buyingStations.id],
-			name: "buying_stations_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
-			columns: [table.idScaleTypes],
-			foreignColumns: [scaleTypes.id],
-			name: "scale_types_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
-			columns: [table.idScaleStatus],
-			foreignColumns: [scaleStatus.id],
-			name: "scale_status_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-]);
-
-export const scaleTypes = pgTable("scale_types", {
-	id: integer().default(sql`nextval('scale_types_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 20 }).notNull(),
-	description: varchar({ length: 255 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("scale_types_name_unq").on(table.name),
-]);
-
 export const users = pgTable("users", {
 	id: integer().default(sql`nextval('users_id_seq'::regclass)`).primaryKey().notNull(),
 	email: varchar({ length: 255 }).notNull(),
@@ -134,6 +48,16 @@ export const users = pgTable("users", {
 	index("idx_users_updated_at").using("btree", table.updatedAt.asc().nullsLast().op("timestamp_ops")).with({fillfactor: "90"}),
 	unique("users_email_unq").on(table.email),
 	unique("users_username_unq").on(table.username),
+	check("users_id_not_null", sql`NOT NULL id`),
+	check("users_email_not_null", sql`NOT NULL email`),
+	check("users_username_not_null", sql`NOT NULL username`),
+	check("users_password_not_null", sql`NOT NULL password`),
+	check("users_refresh_token_not_null", sql`NOT NULL refresh_token`),
+	check("users_created_at_not_null", sql`NOT NULL created_at`),
+	check("users_created_by_not_null", sql`NOT NULL created_by`),
+	check("users_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("users_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("users_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const roles = pgTable("roles", {
@@ -149,6 +73,13 @@ export const roles = pgTable("roles", {
 	index("idx_roles_name").using("btree", table.name.asc().nullsLast().op("text_ops")).with({fillfactor: "90"}),
 	index("idx_roles_updated_at").using("btree", table.updatedAt.asc().nullsLast().op("timestamp_ops")).with({fillfactor: "90"}),
 	unique("roles_name_unq").on(table.name),
+	check("roles_id_not_null", sql`NOT NULL id`),
+	check("roles_name_not_null", sql`NOT NULL name`),
+	check("roles_created_at_not_null", sql`NOT NULL created_at`),
+	check("roles_created_by_not_null", sql`NOT NULL created_by`),
+	check("roles_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("roles_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("roles_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const permissions = pgTable("permissions", {
@@ -164,337 +95,13 @@ export const permissions = pgTable("permissions", {
 	index("idx_permissions_name").using("btree", table.name.asc().nullsLast().op("text_ops")).with({fillfactor: "90"}),
 	index("idx_permissions_updated_at").using("btree", table.updatedAt.asc().nullsLast().op("timestamp_ops")).with({fillfactor: "90"}),
 	unique("permissions_name_unq").on(table.name),
-]);
-
-export const scaleStatus = pgTable("scale_status", {
-	id: integer().default(sql`nextval('scale_status_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 20 }).notNull(),
-	description: varchar({ length: 255 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("scale_status_name_unq").on(table.name),
-]);
-
-export const buyingStations = pgTable("buying_stations", {
-	id: integer().default(sql`nextval('buying_stations_id_seq'::regclass)`).primaryKey().notNull(),
-	idUbigeos: integer("id_ubigeos").notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	address: text().notNull(),
-	isPrincipal: boolean("is_principal").notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idUbigeos],
-			foreignColumns: [ubigeos.id],
-			name: "ubigeos_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	unique("buying_stations_name_unq").on(table.name),
-]);
-
-export const packagingTypes = pgTable("packaging_types", {
-	id: integer().default(sql`nextval('packaging_types_id_seq'::regclass)`).primaryKey().notNull(),
-	code: char({ length: 3 }).notNull(),
-	name: varchar({ length: 100 }).notNull(),
-	description: varchar({ length: 255 }).notNull(),
-	unitTareWeight: numeric("unit_tare_weight", { precision: 10, scale:  2 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("packaging_types_code_unq").on(table.code),
-	unique("packaging_types_name_unq").on(table.name),
-]);
-
-export const productTypes = pgTable("product_types", {
-	id: integer().default(sql`nextval('product_types_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	description: varchar({ length: 255 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("product_types_name_unq").on(table.name),
-]);
-
-export const businessPartners = pgTable("business_partners", {
-	id: integer().default(sql`nextval('business_partners_id_seq'::regclass)`).primaryKey().notNull(),
-	idIdentityDocumentTypes: integer("id_identity_document_types").notNull(),
-	idUbigeos: integer("id_ubigeos").notNull(),
-	documentNumber: varchar("document_number", { length: 20 }).notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	fLastname: varchar("f_lastname", { length: 50 }).notNull(),
-	mLastname: varchar("m_lastname", { length: 50 }).notNull(),
-	companyName: varchar("company_name", { length: 200 }).notNull(),
-	email: varchar({ length: 255 }),
-	phoneNumber: varchar("phone_number", { length: 15 }),
-	address: text().notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idIdentityDocumentTypes],
-			foreignColumns: [identityDocumentTypes.id],
-			name: "identity_document_types_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
-			columns: [table.idUbigeos],
-			foreignColumns: [ubigeos.id],
-			name: "ubigeos_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	unique("business_partners_document_number_unq").on(table.documentNumber),
-	unique("business_partners_company_name_unq").on(table.companyName),
-]);
-
-export const bpRoles = pgTable("bp_roles", {
-	id: integer().default(sql`nextval('bp_roles_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	description: varchar({ length: 250 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("bp_roles_name_unq").on(table.name),
-]);
-
-export const suppliers = pgTable("suppliers", {
-	idBusinessPartners: integer("id_business_partners").primaryKey().notNull(),
-	isProducer: boolean("is_producer").default(false).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idBusinessPartners],
-			foreignColumns: [businessPartners.id],
-			name: "business_partners_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-]);
-
-export const clients = pgTable("clients", {
-	idBusinessPartners: integer("id_business_partners").primaryKey().notNull(),
-	isInternational: boolean("is_international").default(true).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idBusinessPartners],
-			foreignColumns: [businessPartners.id],
-			name: "business_partners_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-]);
-
-export const drivers = pgTable("drivers", {
-	idBusinessPartners: integer("id_business_partners").primaryKey().notNull(),
-	idLicenseTypes: integer("id_license_types").notNull(),
-	license: varchar({ length: 20 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idBusinessPartners],
-			foreignColumns: [businessPartners.id],
-			name: "business_partners_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	foreignKey({
-			columns: [table.idLicenseTypes],
-			foreignColumns: [licenseTypes.id],
-			name: "license_types_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	unique("drivers_license_unq").on(table.license),
-]);
-
-export const carriers = pgTable("carriers", {
-	idBusinessPartners: integer("id_business_partners").primaryKey().notNull(),
-	registrationNumber: varchar("registration_number", { length: 20 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idBusinessPartners],
-			foreignColumns: [businessPartners.id],
-			name: "business_partners_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	unique("carriers_registration_number_unq").on(table.registrationNumber),
-]);
-
-export const trucks = pgTable("trucks", {
-	id: integer().default(sql`nextval('trucks_id_seq'::regclass)`).primaryKey().notNull(),
-	idBusinessPartnersCarriers: integer("id_business_partners_carriers").notNull(),
-	licensePlate: char("license_plate", { length: 6 }).notNull(),
-	payloadCapacity: numeric("payload_capacity", { precision: 10, scale:  2 }).notNull(),
-	configuration: char({ length: 3 }),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idBusinessPartnersCarriers],
-			foreignColumns: [carriers.idBusinessPartners],
-			name: "carriers_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-]);
-
-export const trailers = pgTable("trailers", {
-	id: integer().default(sql`nextval('trailers_id_seq'::regclass)`).primaryKey().notNull(),
-	idBusinessPartnersCarriers: integer("id_business_partners_carriers").notNull(),
-	licensePlate: char("license_plate", { length: 6 }).notNull(),
-	payloadCapacity: numeric("payload_capacity", { precision: 10, scale:  2 }).notNull(),
-	axleCount: integer("axle_count"),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idBusinessPartnersCarriers],
-			foreignColumns: [carriers.idBusinessPartners],
-			name: "carriers_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	unique("trailers_license_plate_unq").on(table.licensePlate),
-]);
-
-export const operations = pgTable("operations", {
-	id: integer().default(sql`nextval('operations_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	code: char({ length: 3 }).notNull(),
-	description: varchar({ length: 250 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").notNull(),
-}, (table) => [
-	unique("operations_name_unq").on(table.name),
-	unique("operations_code_unq").on(table.code),
-]);
-
-export const documentTypes = pgTable("document_types", {
-	id: integer().default(sql`nextval('document_types_id_seq'::regclass)`).primaryKey().notNull(),
-	code: char({ length: 2 }).notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	description: varchar({ length: 250 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("document_types_code_unq").on(table.code),
-	unique("document_types_name_unq").on(table.name),
-]);
-
-export const scaleTicketsDocumentTypes = pgTable("scale_tickets_document_types", {
-	id: integer().default(sql`nextval('scale_tickets_document_types_id_seq'::regclass)`).primaryKey().notNull(),
-	idDocumentTypes: integer("id_document_types").notNull(),
-	idScaleTickets: integer("id_scale_tickets").notNull(),
-	idBusinessPartners: integer("id_business_partners").notNull(),
-	documentSerial: char("document_serial", { length: 4 }).notNull(),
-	documentNumber: char("document_number", { length: 8 }).notNull(),
-	documentDate: date("document_date").notNull(),
-	documentGrossWeight: numeric("document_gross_weight", { precision: 10, scale:  2 }).notNull(),
-	documentNetWeight: numeric("document_net_weight", { precision: 10, scale:  2 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idDocumentTypes],
-			foreignColumns: [documentTypes.id],
-			name: "document_types_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
-			columns: [table.idScaleTickets],
-			foreignColumns: [scaleTickets.id],
-			name: "scale_tickets_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
-			columns: [table.idBusinessPartners],
-			foreignColumns: [businessPartners.id],
-			name: "business_partners_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	unique("scale_tickets_document_types_id_unq").on(table.idDocumentTypes, table.idScaleTickets, table.idBusinessPartners),
-]);
-
-export const products = pgTable("products", {
-	id: integer().default(sql`nextval('products_id_seq'::regclass)`).primaryKey().notNull(),
-	idProductTypes: integer("id_product_types").notNull(),
-	code: char({ length: 9 }).notNull(),
-	name: varchar({ length: 250 }).notNull(),
-	description: text().notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idProductTypes],
-			foreignColumns: [productTypes.id],
-			name: "product_types_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	unique("products_code_unq").on(table.code),
-	unique("products_name_unq").on(table.name),
-]);
-
-export const scaleTicketsDetailsPackagingTypes = pgTable("scale_tickets_details_packaging_types", {
-	id: integer().default(sql`nextval('scale_tickets_details_packaging_types_id_seq'::regclass)`).primaryKey().notNull(),
-	idScaleTicketDetails: integer("id_scale_ticket_details"),
-	idPackagingTypes: integer("id_packaging_types"),
-	idScaleTicketsScaleTicketDetails: integer("id_scale_tickets_scale_ticket_details"),
-	idProductsScaleTicketDetails: integer("id_products_scale_ticket_details"),
-	packageQuantity: integer("package_quantity").notNull(),
-	registeredUnitTareWeight: numeric("registered_unit_tare_weight", { precision: 10, scale:  2 }).notNull(),
-	subtotalTareWeight: numeric("subtotal_tare_weight", { precision: 10, scale:  2 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.idScaleTicketDetails, table.idScaleTicketsScaleTicketDetails, table.idProductsScaleTicketDetails],
-			foreignColumns: [scaleTicketDetails.id, scaleTicketDetails.idScaleTickets, scaleTicketDetails.idProducts],
-			name: "scale_ticket_details_fk"
-		}).onUpdate("cascade").onDelete("set null"),
-	foreignKey({
-			columns: [table.idPackagingTypes],
-			foreignColumns: [packagingTypes.id],
-			name: "packaging_types_fk"
-		}).onUpdate("cascade").onDelete("set null"),
-	unique("scale_tickets_details_packaging_types_id_unq").on(table.idScaleTicketDetails, table.idPackagingTypes),
+	check("permissions_id_not_null", sql`NOT NULL id`),
+	check("permissions_name_not_null", sql`NOT NULL name`),
+	check("permissions_created_at_not_null", sql`NOT NULL created_at`),
+	check("permissions_created_by_not_null", sql`NOT NULL created_by`),
+	check("permissions_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("permissions_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("permissions_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const employees = pgTable("employees", {
@@ -543,8 +150,536 @@ export const employees = pgTable("employees", {
 			foreignColumns: [identityDocumentTypes.id],
 			name: "identity_document_types_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
-	unique("employees_uq").on(table.idUsers),
 	unique("employees_document_number_unq").on(table.documentNumber),
+	unique("employees_uq").on(table.idUsers),
+	check("employees_id_not_null", sql`NOT NULL id`),
+	check("employees_id_identity_document_types_not_null", sql`NOT NULL id_identity_document_types`),
+	check("employees_id_gender_not_null", sql`NOT NULL id_gender`),
+	check("employees_id_position_not_null", sql`NOT NULL id_position`),
+	check("employees_id_department_not_null", sql`NOT NULL id_department`),
+	check("employees_first_name_not_null", sql`NOT NULL first_name`),
+	check("employees_f_lastname_not_null", sql`NOT NULL f_lastname`),
+	check("employees_m_lastname_not_null", sql`NOT NULL m_lastname`),
+	check("employees_birthdate_not_null", sql`NOT NULL birthdate`),
+	check("employees_document_number_not_null", sql`NOT NULL document_number`),
+	check("employees_affiliation_date_not_null", sql`NOT NULL affiliation_date`),
+	check("employees_termination_date_not_null", sql`NOT NULL termination_date`),
+	check("employees_created_at_not_null", sql`NOT NULL created_at`),
+	check("employees_created_by_not_null", sql`NOT NULL created_by`),
+	check("employees_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("employees_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("employees_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const buyingStations = pgTable("buying_stations", {
+	id: integer().default(sql`nextval('buying_stations_id_seq'::regclass)`).primaryKey().notNull(),
+	idUbigeos: integer("id_ubigeos").notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	address: text().notNull(),
+	isPrincipal: boolean("is_principal").notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idUbigeos],
+			foreignColumns: [ubigeos.id],
+			name: "ubigeos_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	unique("buying_stations_name_unq").on(table.name),
+	check("buying_stations_id_not_null", sql`NOT NULL id`),
+	check("buying_stations_id_ubigeos_not_null", sql`NOT NULL id_ubigeos`),
+	check("buying_stations_name_not_null", sql`NOT NULL name`),
+	check("buying_stations_address_not_null", sql`NOT NULL address`),
+	check("buying_stations_is_principal_not_null", sql`NOT NULL is_principal`),
+	check("buying_stations_created_at_not_null", sql`NOT NULL created_at`),
+	check("buying_stations_created_by_not_null", sql`NOT NULL created_by`),
+	check("buying_stations_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("buying_stations_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("buying_stations_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const ubigeos = pgTable("ubigeos", {
+	id: integer().default(sql`nextval('ubigeos_id_seq'::regclass)`).primaryKey().notNull(),
+	code: char({ length: 6 }).notNull(),
+	regionCode: char("region_code", { length: 2 }).notNull(),
+	region: varchar({ length: 20 }).notNull(),
+	provinceCode: char("province_code", { length: 2 }).notNull(),
+	province: varchar({ length: 30 }).notNull(),
+	districtCode: char("district_code", { length: 2 }).notNull(),
+	district: varchar({ length: 50 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("ubigeo_code_unq").on(table.code),
+	check("ubigeos_id_not_null", sql`NOT NULL id`),
+	check("ubigeos_code_not_null", sql`NOT NULL code`),
+	check("ubigeos_region_code_not_null", sql`NOT NULL region_code`),
+	check("ubigeos_region_not_null", sql`NOT NULL region`),
+	check("ubigeos_province_code_not_null", sql`NOT NULL province_code`),
+	check("ubigeos_province_not_null", sql`NOT NULL province`),
+	check("ubigeos_district_code_not_null", sql`NOT NULL district_code`),
+	check("ubigeos_district_not_null", sql`NOT NULL district`),
+	check("ubigeos_created_at_not_null", sql`NOT NULL created_at`),
+	check("ubigeos_created_by_not_null", sql`NOT NULL created_by`),
+	check("ubigeos_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("ubigeos_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("ubigeos_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const identityDocumentTypes = pgTable("identity_document_types", {
+	id: integer().default(sql`nextval('identity_document_types_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	code: varchar({ length: 10 }).notNull(),
+	description: varchar({ length: 250 }).notNull(),
+	length: integer().notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("identity_document_types_name_unq").on(table.name),
+	unique("identity_document_types_code_unq").on(table.code),
+	check("identity_document_types_id_not_null", sql`NOT NULL id`),
+	check("identity_document_types_name_not_null", sql`NOT NULL name`),
+	check("identity_document_types_code_not_null", sql`NOT NULL code`),
+	check("identity_document_types_description_not_null", sql`NOT NULL description`),
+	check("identity_document_types_length_not_null", sql`NOT NULL length`),
+	check("identity_document_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("identity_document_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("identity_document_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("identity_document_types_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("identity_document_types_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const department = pgTable("department", {
+	id: integer().default(sql`nextval('department_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	description: varchar({ length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("department_name_unq").on(table.name),
+	check("department_id_not_null", sql`NOT NULL id`),
+	check("department_name_not_null", sql`NOT NULL name`),
+	check("department_description_not_null", sql`NOT NULL description`),
+	check("department_created_at_not_null", sql`NOT NULL created_at`),
+	check("department_created_by_not_null", sql`NOT NULL created_by`),
+	check("department_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("department_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("department_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const gender = pgTable("gender", {
+	id: integer().default(sql`nextval('gender_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	description: varchar({ length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("gender_name_unq").on(table.name),
+	check("gender_id_not_null", sql`NOT NULL id`),
+	check("gender_name_not_null", sql`NOT NULL name`),
+	check("gender_description_not_null", sql`NOT NULL description`),
+	check("gender_created_at_not_null", sql`NOT NULL created_at`),
+	check("gender_created_by_not_null", sql`NOT NULL created_by`),
+	check("gender_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("gender_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("gender_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const position = pgTable("position", {
+	id: integer().default(sql`nextval('position_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	description: varchar({ length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("position_name_unq").on(table.name),
+	check("position_id_not_null", sql`NOT NULL id`),
+	check("position_name_not_null", sql`NOT NULL name`),
+	check("position_description_not_null", sql`NOT NULL description`),
+	check("position_created_at_not_null", sql`NOT NULL created_at`),
+	check("position_created_by_not_null", sql`NOT NULL created_by`),
+	check("position_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("position_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("position_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const productTypes = pgTable("product_types", {
+	id: integer().default(sql`nextval('product_types_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	description: varchar({ length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("product_types_name_unq").on(table.name),
+	check("product_types_id_not_null", sql`NOT NULL id`),
+	check("product_types_name_not_null", sql`NOT NULL name`),
+	check("product_types_description_not_null", sql`NOT NULL description`),
+	check("product_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("product_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("product_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("product_types_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("product_types_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const scales = pgTable("scales", {
+	id: integer().default(sql`nextval('scales_id_seq'::regclass)`).primaryKey().notNull(),
+	idBuyingStations: integer("id_buying_stations").notNull(),
+	idScaleTypes: integer("id_scale_types").notNull(),
+	idScaleStatus: integer("id_scale_status").notNull(),
+	brand: varchar({ length: 50 }).notNull(),
+	model: varchar({ length: 50 }).notNull(),
+	serialNumber: varchar("serial_number", { length: 50 }).notNull(),
+	maxCapacity: numeric("max_capacity", { precision: 8, scale:  2 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idBuyingStations],
+			foreignColumns: [buyingStations.id],
+			name: "buying_stations_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idScaleTypes],
+			foreignColumns: [scaleTypes.id],
+			name: "scale_types_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idScaleStatus],
+			foreignColumns: [scaleStatus.id],
+			name: "scale_status_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	check("scales_brand_not_null", sql`NOT NULL brand`),
+	check("scales_model_not_null", sql`NOT NULL model`),
+	check("scales_id_not_null", sql`NOT NULL id`),
+	check("scales_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
+	check("scales_id_scale_types_not_null", sql`NOT NULL id_scale_types`),
+	check("scales_id_scale_status_not_null", sql`NOT NULL id_scale_status`),
+	check("scales_serial_number_not_null", sql`NOT NULL serial_number`),
+	check("scales_max_capacity_not_null", sql`NOT NULL max_capacity`),
+	check("scales_created_at_not_null", sql`NOT NULL created_at`),
+	check("scales_created_by_not_null", sql`NOT NULL created_by`),
+	check("scales_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("scales_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("scales_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const scaleTypes = pgTable("scale_types", {
+	id: integer().default(sql`nextval('scale_types_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 20 }).notNull(),
+	description: varchar({ length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("scale_types_name_unq").on(table.name),
+	check("scale_types_id_not_null", sql`NOT NULL id`),
+	check("scale_types_name_not_null", sql`NOT NULL name`),
+	check("scale_types_description_not_null", sql`NOT NULL description`),
+	check("scale_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("scale_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("scale_types_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("scale_types_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const scaleStatus = pgTable("scale_status", {
+	id: integer().default(sql`nextval('scale_status_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 20 }).notNull(),
+	description: varchar({ length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("scale_status_name_unq").on(table.name),
+	check("scale_status_id_not_null", sql`NOT NULL id`),
+	check("scale_status_name_not_null", sql`NOT NULL name`),
+	check("scale_status_description_not_null", sql`NOT NULL description`),
+	check("scale_status_created_at_not_null", sql`NOT NULL created_at`),
+	check("scale_status_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_status_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("scale_status_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("scale_status_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const packagingTypes = pgTable("packaging_types", {
+	id: integer().default(sql`nextval('packaging_types_id_seq'::regclass)`).primaryKey().notNull(),
+	code: char({ length: 3 }).notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	description: varchar({ length: 255 }).notNull(),
+	unitTareWeight: numeric("unit_tare_weight", { precision: 10, scale:  2 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("packaging_types_name_unq").on(table.name),
+	unique("packaging_types_code_unq").on(table.code),
+	check("packaging_types_id_not_null", sql`NOT NULL id`),
+	check("packaging_types_code_not_null", sql`NOT NULL code`),
+	check("packaging_types_name_not_null", sql`NOT NULL name`),
+	check("packaging_types_description_not_null", sql`NOT NULL description`),
+	check("packaging_types_unit_tare_weight_not_null", sql`NOT NULL unit_tare_weight`),
+	check("packaging_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("packaging_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("packaging_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("packaging_types_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("packaging_types_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const products = pgTable("products", {
+	id: integer().default(sql`nextval('products_id_seq'::regclass)`).primaryKey().notNull(),
+	idProductTypes: integer("id_product_types").notNull(),
+	code: char({ length: 9 }).notNull(),
+	name: varchar({ length: 250 }).notNull(),
+	description: text().notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idProductTypes],
+			foreignColumns: [productTypes.id],
+			name: "product_types_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	unique("products_code_unq").on(table.code),
+	unique("products_name_unq").on(table.name),
+	check("products_id_not_null", sql`NOT NULL id`),
+	check("products_id_product_types_not_null", sql`NOT NULL id_product_types`),
+	check("products_code_not_null", sql`NOT NULL code`),
+	check("products_name_not_null", sql`NOT NULL name`),
+	check("products_description_not_null", sql`NOT NULL description`),
+	check("products_created_at_not_null", sql`NOT NULL created_at`),
+	check("products_created_by_not_null", sql`NOT NULL created_by`),
+	check("products_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("products_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("products_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const businessPartners = pgTable("business_partners", {
+	id: integer().default(sql`nextval('business_partners_id_seq'::regclass)`).primaryKey().notNull(),
+	idIdentityDocumentTypes: integer("id_identity_document_types").notNull(),
+	idUbigeos: integer("id_ubigeos").notNull(),
+	documentNumber: varchar("document_number", { length: 20 }).notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	fLastname: varchar("f_lastname", { length: 50 }).notNull(),
+	mLastname: varchar("m_lastname", { length: 50 }).notNull(),
+	companyName: varchar("company_name", { length: 200 }).notNull(),
+	email: varchar({ length: 255 }),
+	phoneNumber: varchar("phone_number", { length: 15 }),
+	address: text().notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idUbigeos],
+			foreignColumns: [ubigeos.id],
+			name: "ubigeos_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idIdentityDocumentTypes],
+			foreignColumns: [identityDocumentTypes.id],
+			name: "identity_document_types_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	unique("business_partners_document_number_unq").on(table.documentNumber),
+	unique("business_partners_company_name_unq").on(table.companyName),
+	check("business_partners_id_not_null", sql`NOT NULL id`),
+	check("business_partners_id_identity_document_types_not_null", sql`NOT NULL id_identity_document_types`),
+	check("business_partners_id_ubigeos_not_null", sql`NOT NULL id_ubigeos`),
+	check("business_partners_document_number_not_null", sql`NOT NULL document_number`),
+	check("business_partners_name_not_null", sql`NOT NULL name`),
+	check("business_partners_f_lastname_not_null", sql`NOT NULL f_lastname`),
+	check("business_partners_m_lastname_not_null", sql`NOT NULL m_lastname`),
+	check("business_partners_company_name_not_null", sql`NOT NULL company_name`),
+	check("business_partners_address_not_null", sql`NOT NULL address`),
+	check("business_partners_created_at_not_null", sql`NOT NULL created_at`),
+	check("business_partners_created_by_not_null", sql`NOT NULL created_by`),
+	check("business_partners_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("business_partners_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("business_partners_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const drivers = pgTable("drivers", {
+	idBusinessPartners: integer("id_business_partners").primaryKey().notNull(),
+	idLicenseTypes: integer("id_license_types").notNull(),
+	license: varchar({ length: 20 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idBusinessPartners],
+			foreignColumns: [businessPartners.id],
+			name: "business_partners_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.idLicenseTypes],
+			foreignColumns: [licenseTypes.id],
+			name: "license_types_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	unique("drivers_license_unq").on(table.license),
+	check("drivers_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("drivers_id_license_types_not_null", sql`NOT NULL id_license_types`),
+	check("drivers_license_not_null", sql`NOT NULL license`),
+	check("drivers_created_at_not_null", sql`NOT NULL created_at`),
+	check("drivers_created_by_not_null", sql`NOT NULL created_by`),
+	check("drivers_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("drivers_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("drivers_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const carriers = pgTable("carriers", {
+	idBusinessPartners: integer("id_business_partners").primaryKey().notNull(),
+	registrationNumber: varchar("registration_number", { length: 20 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idBusinessPartners],
+			foreignColumns: [businessPartners.id],
+			name: "business_partners_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	unique("carriers_registration_number_unq").on(table.registrationNumber),
+	check("carriers_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("carriers_registration_number_not_null", sql`NOT NULL registration_number`),
+	check("carriers_created_at_not_null", sql`NOT NULL created_at`),
+	check("carriers_created_by_not_null", sql`NOT NULL created_by`),
+	check("carriers_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("carriers_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("carriers_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const suppliers = pgTable("suppliers", {
+	idBusinessPartners: integer("id_business_partners").primaryKey().notNull(),
+	isProducer: boolean("is_producer").default(false).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idBusinessPartners],
+			foreignColumns: [businessPartners.id],
+			name: "business_partners_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	check("suppliers_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("suppliers_is_producer_not_null", sql`NOT NULL is_producer`),
+	check("suppliers_created_at_not_null", sql`NOT NULL created_at`),
+	check("suppliers_created_by_not_null", sql`NOT NULL created_by`),
+	check("suppliers_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("suppliers_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("suppliers_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const clients = pgTable("clients", {
+	idBusinessPartners: integer("id_business_partners").primaryKey().notNull(),
+	isInternational: boolean("is_international").default(true).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idBusinessPartners],
+			foreignColumns: [businessPartners.id],
+			name: "business_partners_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	check("clients_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("clients_is_international_not_null", sql`NOT NULL is_international`),
+	check("clients_created_at_not_null", sql`NOT NULL created_at`),
+	check("clients_created_by_not_null", sql`NOT NULL created_by`),
+	check("clients_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("clients_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("clients_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const bpRoles = pgTable("bp_roles", {
+	id: integer().default(sql`nextval('bp_roles_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	description: varchar({ length: 250 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("bp_roles_name_unq").on(table.name),
+	check("bp_roles_id_not_null", sql`NOT NULL id`),
+	check("bp_roles_name_not_null", sql`NOT NULL name`),
+	check("bp_roles_description_not_null", sql`NOT NULL description`),
+	check("bp_roles_created_at_not_null", sql`NOT NULL created_at`),
+	check("bp_roles_created_by_not_null", sql`NOT NULL created_by`),
+	check("bp_roles_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("bp_roles_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("bp_roles_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const trucks = pgTable("trucks", {
+	id: integer().default(sql`nextval('trucks_id_seq'::regclass)`).primaryKey().notNull(),
+	idBusinessPartnersCarriers: integer("id_business_partners_carriers").notNull(),
+	licensePlate: char("license_plate", { length: 6 }).notNull(),
+	payloadCapacity: numeric("payload_capacity", { precision: 10, scale:  2 }).notNull(),
+	configuration: char({ length: 3 }),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idBusinessPartnersCarriers],
+			foreignColumns: [carriers.idBusinessPartners],
+			name: "carriers_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	check("trucks_id_not_null", sql`NOT NULL id`),
+	check("trucks_id_business_partners_carriers_not_null", sql`NOT NULL id_business_partners_carriers`),
+	check("trucks_license_plate_not_null", sql`NOT NULL license_plate`),
+	check("trucks_payload_capacity_not_null", sql`NOT NULL payload_capacity`),
+	check("trucks_created_at_not_null", sql`NOT NULL created_at`),
+	check("trucks_created_by_not_null", sql`NOT NULL created_by`),
+	check("trucks_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("trucks_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("trucks_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const licenseTypes = pgTable("license_types", {
@@ -558,6 +693,139 @@ export const licenseTypes = pgTable("license_types", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("license_types_name_unq").on(table.name),
+	check("license_types_id_not_null", sql`NOT NULL id`),
+	check("license_types_name_not_null", sql`NOT NULL name`),
+	check("license_types_description_not_null", sql`NOT NULL description`),
+	check("license_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("license_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("license_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("license_types_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("license_types_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const trailers = pgTable("trailers", {
+	id: integer().default(sql`nextval('trailers_id_seq'::regclass)`).primaryKey().notNull(),
+	idBusinessPartnersCarriers: integer("id_business_partners_carriers").notNull(),
+	licensePlate: char("license_plate", { length: 6 }).notNull(),
+	payloadCapacity: numeric("payload_capacity", { precision: 10, scale:  2 }).notNull(),
+	axleCount: integer("axle_count"),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idBusinessPartnersCarriers],
+			foreignColumns: [carriers.idBusinessPartners],
+			name: "carriers_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	unique("trailers_license_plate_unq").on(table.licensePlate),
+	check("trailers_id_not_null", sql`NOT NULL id`),
+	check("trailers_id_business_partners_carriers_not_null", sql`NOT NULL id_business_partners_carriers`),
+	check("trailers_license_plate_not_null", sql`NOT NULL license_plate`),
+	check("trailers_payload_capacity_not_null", sql`NOT NULL payload_capacity`),
+	check("trailers_created_at_not_null", sql`NOT NULL created_at`),
+	check("trailers_created_by_not_null", sql`NOT NULL created_by`),
+	check("trailers_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("trailers_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("trailers_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const operations = pgTable("operations", {
+	id: integer().default(sql`nextval('operations_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	code: char({ length: 3 }).notNull(),
+	description: varchar({ length: 250 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").notNull(),
+}, (table) => [
+	unique("operations_name_unq").on(table.name),
+	unique("operations_code_unq").on(table.code),
+	check("operations_id_not_null", sql`NOT NULL id`),
+	check("operations_name_not_null", sql`NOT NULL name`),
+	check("operations_code_not_null", sql`NOT NULL code`),
+	check("operations_description_not_null", sql`NOT NULL description`),
+	check("operations_created_at_not_null", sql`NOT NULL created_at`),
+	check("operations_created_by_not_null", sql`NOT NULL created_by`),
+	check("operations_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("operations_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("operations_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const documentTypes = pgTable("document_types", {
+	id: integer().default(sql`nextval('document_types_id_seq'::regclass)`).primaryKey().notNull(),
+	code: char({ length: 2 }).notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	description: varchar({ length: 250 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("document_types_name_unq").on(table.name),
+	unique("document_types_code_unq").on(table.code),
+	check("document_types_id_not_null", sql`NOT NULL id`),
+	check("document_types_code_not_null", sql`NOT NULL code`),
+	check("document_types_name_not_null", sql`NOT NULL name`),
+	check("document_types_description_not_null", sql`NOT NULL description`),
+	check("document_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("document_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("document_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("document_types_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("document_types_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const scaleTicketsDocumentTypes = pgTable("scale_tickets_document_types", {
+	id: integer().default(sql`nextval('scale_tickets_document_types_id_seq'::regclass)`).primaryKey().notNull(),
+	idDocumentTypes: integer("id_document_types").notNull(),
+	idScaleTickets: integer("id_scale_tickets").notNull(),
+	idBusinessPartners: integer("id_business_partners").notNull(),
+	documentSerial: char("document_serial", { length: 4 }).notNull(),
+	documentNumber: char("document_number", { length: 8 }).notNull(),
+	documentDate: date("document_date").notNull(),
+	documentGrossWeight: numeric("document_gross_weight", { precision: 10, scale:  2 }).notNull(),
+	documentNetWeight: numeric("document_net_weight", { precision: 10, scale:  2 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idDocumentTypes],
+			foreignColumns: [documentTypes.id],
+			name: "document_types_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idBusinessPartners],
+			foreignColumns: [businessPartners.id],
+			name: "business_partners_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idScaleTickets],
+			foreignColumns: [scaleTickets.id],
+			name: "scale_tickets_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	unique("scale_tickets_document_types_id_unq").on(table.idBusinessPartners, table.idDocumentTypes, table.idScaleTickets),
+	check("scale_tickets_document_types_id_not_null", sql`NOT NULL id`),
+	check("scale_tickets_document_types_id_document_types_not_null", sql`NOT NULL id_document_types`),
+	check("scale_tickets_document_types_id_scale_tickets_not_null", sql`NOT NULL id_scale_tickets`),
+	check("scale_tickets_document_types_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("scale_tickets_document_types_document_serial_not_null", sql`NOT NULL document_serial`),
+	check("scale_tickets_document_types_document_number_not_null", sql`NOT NULL document_number`),
+	check("scale_tickets_document_types_document_date_not_null", sql`NOT NULL document_date`),
+	check("scale_tickets_document_types_document_gross_weight_not_null", sql`NOT NULL document_gross_weight`),
+	check("scale_tickets_document_types_document_net_weight_not_null", sql`NOT NULL document_net_weight`),
+	check("scale_tickets_document_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("scale_tickets_document_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_tickets_document_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("scale_tickets_document_types_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("scale_tickets_document_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleTickets = pgTable("scale_tickets", {
@@ -571,7 +839,7 @@ export const scaleTickets = pgTable("scale_tickets", {
 	idBusinessPartnersDrivers: integer("id_business_partners_drivers"),
 	idBusinessPartnersClients: integer("id_business_partners_clients"),
 	idBusinessPartnersSuppliers: integer("id_business_partners_suppliers"),
-	idTrucks: integer("id_trucks"),
+	idTrucks: integer("id_trucks").notNull(),
 	idTrailers: integer("id_trailers"),
 	idScaleTicketStatus: integer("id_scale_ticket_status").notNull(),
 	creationDate: date("creation_date").notNull(),
@@ -585,6 +853,11 @@ export const scaleTickets = pgTable("scale_tickets", {
 	updatedBy: integer("updated_by").notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
+	foreignKey({
+			columns: [table.idScaleTicketStatus],
+			foreignColumns: [scaleTicketStatus.id],
+			name: "scale_ticket_status_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
 			columns: [table.idBuyingStations],
 			foreignColumns: [buyingStations.id],
@@ -629,7 +902,7 @@ export const scaleTickets = pgTable("scale_tickets", {
 			columns: [table.idTrucks],
 			foreignColumns: [trucks.id],
 			name: "trucks_fk"
-		}).onUpdate("cascade").onDelete("set null"),
+		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
 			columns: [table.idTrailers],
 			foreignColumns: [trailers.id],
@@ -640,11 +913,22 @@ export const scaleTickets = pgTable("scale_tickets", {
 			foreignColumns: [buyingStations.id],
 			name: "buying_stations_fk2"
 		}).onUpdate("cascade").onDelete("set null"),
-	foreignKey({
-			columns: [table.idScaleTicketStatus],
-			foreignColumns: [scaleTicketStatus.id],
-			name: "scale_ticket_status_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
+	check("scale_tickets_id_not_null", sql`NOT NULL id`),
+	check("scale_tickets_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
+	check("scale_tickets_id_employees_not_null", sql`NOT NULL id_employees`),
+	check("scale_tickets_id_operations_not_null", sql`NOT NULL id_operations`),
+	check("scale_tickets_id_trucks_not_null", sql`NOT NULL id_trucks`),
+	check("scale_tickets_id_scale_ticket_status_not_null", sql`NOT NULL id_scale_ticket_status`),
+	check("scale_tickets_creation_date_not_null", sql`NOT NULL creation_date`),
+	check("scale_tickets_total_gross_weight_not_null", sql`NOT NULL total_gross_weight`),
+	check("scale_tickets_total_tare_weight_not_null", sql`NOT NULL total_tare_weight`),
+	check("scale_tickets_total_net_weigth_not_null", sql`NOT NULL total_net_weigth`),
+	check("scale_tickets_total_tare_adjustment_not_null", sql`NOT NULL total_tare_adjustment`),
+	check("scale_tickets_created_at_not_null", sql`NOT NULL created_at`),
+	check("scale_tickets_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_tickets_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("scale_tickets_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("scale_tickets_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleTicketStatus = pgTable("scale_ticket_status", {
@@ -660,37 +944,52 @@ export const scaleTicketStatus = pgTable("scale_ticket_status", {
 }, (table) => [
 	unique("scale_ticket_status_code_unq").on(table.code),
 	unique("scale_ticket_status_name_unq").on(table.name),
+	check("scale_ticket_status_id_not_null", sql`NOT NULL id`),
+	check("scale_ticket_status_code_not_null", sql`NOT NULL code`),
+	check("scale_ticket_status_name_not_null", sql`NOT NULL name`),
+	check("scale_ticket_status_description_not_null", sql`NOT NULL description`),
+	check("scale_ticket_status_created_at_not_null", sql`NOT NULL created_at`),
+	check("scale_ticket_status_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_ticket_status_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("scale_ticket_status_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("scale_ticket_status_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
-export const ubigeos = pgTable("ubigeos", {
-	id: integer().default(sql`nextval('ubigeos_id_seq'::regclass)`).primaryKey().notNull(),
-	code: char({ length: 6 }).notNull(),
-	regionCode: char("region_code", { length: 2 }).notNull(),
-	region: varchar({ length: 20 }).notNull(),
-	provinceCode: char("province_code", { length: 2 }).notNull(),
-	province: varchar({ length: 30 }).notNull(),
-	districtCode: char("district_code", { length: 2 }).notNull(),
-	district: varchar({ length: 50 }).notNull(),
+export const scaleTicketsDetailsPackagingTypes = pgTable("scale_tickets_details_packaging_types", {
+	id: integer().default(sql`nextval('scale_tickets_details_packaging_types_id_seq'::regclass)`).primaryKey().notNull(),
+	idScaleTicketDetails: integer("id_scale_ticket_details"),
+	idPackagingTypes: integer("id_packaging_types"),
+	idScaleTicketsScaleTicketDetails: integer("id_scale_tickets_scale_ticket_details"),
+	idProductsScaleTicketDetails: integer("id_products_scale_ticket_details"),
+	packageQuantity: integer("package_quantity").notNull(),
+	registeredUnitTareWeight: numeric("registered_unit_tare_weight", { precision: 10, scale:  2 }).notNull(),
+	subtotalTareWeight: numeric("subtotal_tare_weight", { precision: 10, scale:  2 }).notNull(),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
 	createdBy: integer("created_by").notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
 	updatedBy: integer("updated_by").notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
-	unique("ubigeo_code_unq").on(table.code),
-]);
-
-export const position = pgTable("position", {
-	id: integer().default(sql`nextval('position_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 100 }).notNull(),
-	description: varchar({ length: 255 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("position_name_unq").on(table.name),
+	foreignKey({
+			columns: [table.idScaleTicketDetails, table.idScaleTicketsScaleTicketDetails, table.idProductsScaleTicketDetails],
+			foreignColumns: [scaleTicketDetails.id, scaleTicketDetails.idScaleTickets, scaleTicketDetails.idProducts],
+			name: "scale_ticket_details_fk"
+		}).onUpdate("cascade").onDelete("set null"),
+	foreignKey({
+			columns: [table.idPackagingTypes],
+			foreignColumns: [packagingTypes.id],
+			name: "packaging_types_fk"
+		}).onUpdate("cascade").onDelete("set null"),
+	unique("scale_tickets_details_packaging_types_id_unq").on(table.idPackagingTypes, table.idScaleTicketDetails),
+	check("scale_tickets_details_packaging_types_id_not_null", sql`NOT NULL id`),
+	check("scale_tickets_details_packaging_types_package_quantity_not_null", sql`NOT NULL package_quantity`),
+	check("scale_tickets_details_packa_registered_unit_tare_weigh_not_null", sql`NOT NULL registered_unit_tare_weight`),
+	check("scale_tickets_details_packaging_t_subtotal_tare_weight_not_null", sql`NOT NULL subtotal_tare_weight`),
+	check("scale_tickets_details_packaging_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("scale_tickets_details_packaging_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_tickets_details_packaging_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("scale_tickets_details_packaging_types_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("scale_tickets_details_packaging_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const usersRoles = pgTable("users_roles", {
@@ -713,6 +1012,13 @@ export const usersRoles = pgTable("users_roles", {
 			name: "roles_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.idRoles, table.idUsers], name: "users_roles_pk"}),
+	check("users_roles_id_roles_not_null", sql`NOT NULL id_roles`),
+	check("users_roles_id_users_not_null", sql`NOT NULL id_users`),
+	check("users_roles_created_at_not_null", sql`NOT NULL created_at`),
+	check("users_roles_created_by_not_null", sql`NOT NULL created_by`),
+	check("users_roles_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("users_roles_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("users_roles_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const rolesPermissions = pgTable("roles_permissions", {
@@ -735,6 +1041,42 @@ export const rolesPermissions = pgTable("roles_permissions", {
 			name: "permissions_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.idPermissions, table.idRoles], name: "roles_permissions_pk"}),
+	check("roles_permissions_id_permissions_not_null", sql`NOT NULL id_permissions`),
+	check("roles_permissions_id_roles_not_null", sql`NOT NULL id_roles`),
+	check("roles_permissions_created_at_not_null", sql`NOT NULL created_at`),
+	check("roles_permissions_created_by_not_null", sql`NOT NULL created_by`),
+	check("roles_permissions_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("roles_permissions_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("roles_permissions_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const operationsProductTypes = pgTable("operations_product_types", {
+	idOperations: integer("id_operations").notNull(),
+	idProductTypes: integer("id_product_types").notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idProductTypes],
+			foreignColumns: [productTypes.id],
+			name: "product_types_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.idOperations],
+			foreignColumns: [operations.id],
+			name: "operations_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	primaryKey({ columns: [table.idOperations, table.idProductTypes], name: "operations_product_types_pk"}),
+	check("operations_product_types_id_operations_not_null", sql`NOT NULL id_operations`),
+	check("operations_product_types_id_product_types_not_null", sql`NOT NULL id_product_types`),
+	check("operations_product_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("operations_product_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("operations_product_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("operations_product_types_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("operations_product_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const buyingStationsSuppliers = pgTable("buying_stations_suppliers", {
@@ -756,7 +1098,14 @@ export const buyingStationsSuppliers = pgTable("buying_stations_suppliers", {
 			foreignColumns: [suppliers.idBusinessPartners],
 			name: "suppliers_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
-	primaryKey({ columns: [table.idBuyingStations, table.idBusinessPartnersSuppliers], name: "buying_stations_suppliers_pk"}),
+	primaryKey({ columns: [table.idBusinessPartnersSuppliers, table.idBuyingStations], name: "buying_stations_suppliers_pk"}),
+	check("buying_stations_suppliers_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
+	check("buying_stations_suppliers_id_business_partners_supplie_not_null", sql`NOT NULL id_business_partners_suppliers`),
+	check("buying_stations_suppliers_created_at_not_null", sql`NOT NULL created_at`),
+	check("buying_stations_suppliers_created_by_not_null", sql`NOT NULL created_by`),
+	check("buying_stations_suppliers_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("buying_stations_suppliers_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("buying_stations_suppliers_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const bpRolesOperations = pgTable("bp_roles_operations", {
@@ -769,38 +1118,23 @@ export const bpRolesOperations = pgTable("bp_roles_operations", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idOperations],
-			foreignColumns: [operations.id],
-			name: "operations_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	foreignKey({
 			columns: [table.idBpRoles],
 			foreignColumns: [bpRoles.id],
 			name: "bp_roles_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
-	primaryKey({ columns: [table.idOperations, table.idBpRoles], name: "bp_roles_operations_pk"}),
-]);
-
-export const operationsProductTypes = pgTable("operations_product_types", {
-	idOperations: integer("id_operations").notNull(),
-	idProductTypes: integer("id_product_types").notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
 	foreignKey({
 			columns: [table.idOperations],
 			foreignColumns: [operations.id],
 			name: "operations_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
-	foreignKey({
-			columns: [table.idProductTypes],
-			foreignColumns: [productTypes.id],
-			name: "product_types_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	primaryKey({ columns: [table.idOperations, table.idProductTypes], name: "operations_product_types_pk"}),
+	primaryKey({ columns: [table.idBpRoles, table.idOperations], name: "bp_roles_operations_pk"}),
+	check("bp_roles_operations_id_operations_not_null", sql`NOT NULL id_operations`),
+	check("bp_roles_operations_id_bp_roles_not_null", sql`NOT NULL id_bp_roles`),
+	check("bp_roles_operations_created_at_not_null", sql`NOT NULL created_at`),
+	check("bp_roles_operations_created_by_not_null", sql`NOT NULL created_by`),
+	check("bp_roles_operations_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("bp_roles_operations_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("bp_roles_operations_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const employeesBuyingStations = pgTable("employees_buying_stations", {
@@ -824,7 +1158,15 @@ export const employeesBuyingStations = pgTable("employees_buying_stations", {
 			foreignColumns: [buyingStations.id],
 			name: "buying_stations_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
-	primaryKey({ columns: [table.idEmployees, table.idBuyingStations], name: "employees_buying_stations_pk"}),
+	primaryKey({ columns: [table.idBuyingStations, table.idEmployees], name: "employees_buying_stations_pk"}),
+	check("employees_buying_stations_id_employees_not_null", sql`NOT NULL id_employees`),
+	check("employees_buying_stations_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
+	check("employees_buying_stations_effective_date_not_null", sql`NOT NULL effective_date`),
+	check("employees_buying_stations_created_at_not_null", sql`NOT NULL created_at`),
+	check("employees_buying_stations_created_by_not_null", sql`NOT NULL created_by`),
+	check("employees_buying_stations_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("employees_buying_stations_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("employees_buying_stations_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const businessPartnersBpRoles = pgTable("business_partners_bp_roles", {
@@ -848,7 +1190,15 @@ export const businessPartnersBpRoles = pgTable("business_partners_bp_roles", {
 			foreignColumns: [bpRoles.id],
 			name: "bp_roles_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
-	primaryKey({ columns: [table.idBusinessPartners, table.idBpRoles], name: "business_partners_bp_roles_pk"}),
+	primaryKey({ columns: [table.idBpRoles, table.idBusinessPartners], name: "business_partners_bp_roles_pk"}),
+	check("business_partners_bp_roles_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("business_partners_bp_roles_id_bp_roles_not_null", sql`NOT NULL id_bp_roles`),
+	check("business_partners_bp_roles_effective_date_not_null", sql`NOT NULL effective_date`),
+	check("business_partners_bp_roles_created_at_not_null", sql`NOT NULL created_at`),
+	check("business_partners_bp_roles_created_by_not_null", sql`NOT NULL created_by`),
+	check("business_partners_bp_roles_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("business_partners_bp_roles_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("business_partners_bp_roles_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const driversCarriers = pgTable("drivers_carriers", {
@@ -863,16 +1213,24 @@ export const driversCarriers = pgTable("drivers_carriers", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idBusinessPartnersCarriers],
-			foreignColumns: [carriers.idBusinessPartners],
-			name: "carriers_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
 			columns: [table.idBusinessPartnersDrivers],
 			foreignColumns: [drivers.idBusinessPartners],
 			name: "drivers_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
-	primaryKey({ columns: [table.idBusinessPartnersDrivers, table.idBusinessPartnersCarriers], name: "drivers_carriers_pk"}),
+	foreignKey({
+			columns: [table.idBusinessPartnersCarriers],
+			foreignColumns: [carriers.idBusinessPartners],
+			name: "carriers_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	primaryKey({ columns: [table.idBusinessPartnersCarriers, table.idBusinessPartnersDrivers], name: "drivers_carriers_pk"}),
+	check("drivers_carriers_id_business_partners_drivers_not_null", sql`NOT NULL id_business_partners_drivers`),
+	check("drivers_carriers_id_business_partners_carriers_not_null", sql`NOT NULL id_business_partners_carriers`),
+	check("drivers_carriers_effective_date_not_null", sql`NOT NULL effective_date`),
+	check("drivers_carriers_created_at_not_null", sql`NOT NULL created_at`),
+	check("drivers_carriers_created_by_not_null", sql`NOT NULL created_by`),
+	check("drivers_carriers_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("drivers_carriers_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("drivers_carriers_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleTicketDetails = pgTable("scale_ticket_details", {
@@ -883,13 +1241,18 @@ export const scaleTicketDetails = pgTable("scale_ticket_details", {
 	grossWeight: numeric("gross_weight", { precision: 10, scale:  2 }).notNull(),
 	tareWeight: numeric("tare_weight", { precision: 10, scale:  2 }).notNull(),
 	netWeight: numeric("net_weight", { precision: 10, scale:  2 }).notNull(),
-	observations: text().notNull(),
+	observations: text(),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
 	createdBy: integer("created_by").notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
 	updatedBy: integer("updated_by").notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
+	foreignKey({
+			columns: [table.idProducts],
+			foreignColumns: [products.id],
+			name: "products_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
 	foreignKey({
 			columns: [table.idScaleTickets],
 			foreignColumns: [scaleTickets.id],
@@ -900,14 +1263,92 @@ export const scaleTicketDetails = pgTable("scale_ticket_details", {
 			foreignColumns: [scales.id],
 			name: "scales_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
-			columns: [table.idProducts],
-			foreignColumns: [products.id],
-			name: "products_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	primaryKey({ columns: [table.id, table.idScaleTickets, table.idProducts], name: "scale_ticket_details_pk"}),
+	primaryKey({ columns: [table.id, table.idProducts, table.idScaleTickets], name: "scale_ticket_details_pk"}),
+	check("scale_ticket_details_id_not_null", sql`NOT NULL id`),
+	check("scale_ticket_details_id_scale_tickets_not_null", sql`NOT NULL id_scale_tickets`),
+	check("scale_ticket_details_id_products_not_null", sql`NOT NULL id_products`),
+	check("scale_ticket_details_id_scales_not_null", sql`NOT NULL id_scales`),
+	check("scale_ticket_details_gross_weight_not_null", sql`NOT NULL gross_weight`),
+	check("scale_ticket_details_tare_weight_not_null", sql`NOT NULL tare_weight`),
+	check("scale_ticket_details_net_weight_not_null", sql`NOT NULL net_weight`),
+	check("scale_ticket_details_created_at_not_null", sql`NOT NULL created_at`),
+	check("scale_ticket_details_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_ticket_details_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("scale_ticket_details_updated_by_not_null", sql`NOT NULL updated_by`),
+	check("scale_ticket_details_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
+
+export const employeesRelations = relations(employees, ({one, many}) => ({
+	user: one(users, {
+		fields: [employees.idUsers],
+		references: [users.id]
+	}),
+	position: one(position, {
+		fields: [employees.idPosition],
+		references: [position.id]
+	}),
+	department: one(department, {
+		fields: [employees.idDepartment],
+		references: [department.id]
+	}),
+	gender: one(gender, {
+		fields: [employees.idGender],
+		references: [gender.id]
+	}),
+	identityDocumentType: one(identityDocumentTypes, {
+		fields: [employees.idIdentityDocumentTypes],
+		references: [identityDocumentTypes.id]
+	}),
+	scaleTickets: many(scaleTickets),
+	employeesBuyingStations: many(employeesBuyingStations),
+}));
+
+export const usersRelations = relations(users, ({many}) => ({
+	employees: many(employees),
+	usersRoles: many(usersRoles),
+}));
+
+export const positionRelations = relations(position, ({many}) => ({
+	employees: many(employees),
+}));
+
+export const departmentRelations = relations(department, ({many}) => ({
+	employees: many(employees),
+}));
+
+export const genderRelations = relations(gender, ({many}) => ({
+	employees: many(employees),
+}));
+
+export const identityDocumentTypesRelations = relations(identityDocumentTypes, ({many}) => ({
+	employees: many(employees),
+	businessPartners: many(businessPartners),
+}));
+
+export const buyingStationsRelations = relations(buyingStations, ({one, many}) => ({
+	ubigeo: one(ubigeos, {
+		fields: [buyingStations.idUbigeos],
+		references: [ubigeos.id]
+	}),
+	scales: many(scales),
+	scaleTickets_idBuyingStations: many(scaleTickets, {
+		relationName: "scaleTickets_idBuyingStations_buyingStations_id"
+	}),
+	scaleTickets_idBuyingStationsOrigin: many(scaleTickets, {
+		relationName: "scaleTickets_idBuyingStationsOrigin_buyingStations_id"
+	}),
+	scaleTickets_idBuyingStationsDestination: many(scaleTickets, {
+		relationName: "scaleTickets_idBuyingStationsDestination_buyingStations_id"
+	}),
+	buyingStationsSuppliers: many(buyingStationsSuppliers),
+	employeesBuyingStations: many(employeesBuyingStations),
+}));
+
+export const ubigeosRelations = relations(ubigeos, ({many}) => ({
+	buyingStations: many(buyingStations),
+	businessPartners: many(businessPartners),
+}));
 
 export const scalesRelations = relations(scales, ({one, many}) => ({
 	buyingStation: one(buyingStations, {
@@ -925,25 +1366,6 @@ export const scalesRelations = relations(scales, ({one, many}) => ({
 	scaleTicketDetails: many(scaleTicketDetails),
 }));
 
-export const buyingStationsRelations = relations(buyingStations, ({one, many}) => ({
-	scales: many(scales),
-	ubigeo: one(ubigeos, {
-		fields: [buyingStations.idUbigeos],
-		references: [ubigeos.id]
-	}),
-	scaleTickets_idBuyingStations: many(scaleTickets, {
-		relationName: "scaleTickets_idBuyingStations_buyingStations_id"
-	}),
-	scaleTickets_idBuyingStationsOrigin: many(scaleTickets, {
-		relationName: "scaleTickets_idBuyingStationsOrigin_buyingStations_id"
-	}),
-	scaleTickets_idBuyingStationsDestination: many(scaleTickets, {
-		relationName: "scaleTickets_idBuyingStationsDestination_buyingStations_id"
-	}),
-	buyingStationsSuppliers: many(buyingStationsSuppliers),
-	employeesBuyingStations: many(employeesBuyingStations),
-}));
-
 export const scaleTypesRelations = relations(scaleTypes, ({many}) => ({
 	scales: many(scales),
 }));
@@ -952,48 +1374,34 @@ export const scaleStatusRelations = relations(scaleStatus, ({many}) => ({
 	scales: many(scales),
 }));
 
-export const ubigeosRelations = relations(ubigeos, ({many}) => ({
-	buyingStations: many(buyingStations),
-	businessPartners: many(businessPartners),
+export const productsRelations = relations(products, ({one, many}) => ({
+	productType: one(productTypes, {
+		fields: [products.idProductTypes],
+		references: [productTypes.id]
+	}),
+	scaleTicketDetails: many(scaleTicketDetails),
+}));
+
+export const productTypesRelations = relations(productTypes, ({many}) => ({
+	products: many(products),
+	operationsProductTypes: many(operationsProductTypes),
 }));
 
 export const businessPartnersRelations = relations(businessPartners, ({one, many}) => ({
-	identityDocumentType: one(identityDocumentTypes, {
-		fields: [businessPartners.idIdentityDocumentTypes],
-		references: [identityDocumentTypes.id]
-	}),
 	ubigeo: one(ubigeos, {
 		fields: [businessPartners.idUbigeos],
 		references: [ubigeos.id]
 	}),
-	suppliers: many(suppliers),
-	clients: many(clients),
+	identityDocumentType: one(identityDocumentTypes, {
+		fields: [businessPartners.idIdentityDocumentTypes],
+		references: [identityDocumentTypes.id]
+	}),
 	drivers: many(drivers),
 	carriers: many(carriers),
+	suppliers: many(suppliers),
+	clients: many(clients),
 	scaleTicketsDocumentTypes: many(scaleTicketsDocumentTypes),
 	businessPartnersBpRoles: many(businessPartnersBpRoles),
-}));
-
-export const identityDocumentTypesRelations = relations(identityDocumentTypes, ({many}) => ({
-	businessPartners: many(businessPartners),
-	employees: many(employees),
-}));
-
-export const suppliersRelations = relations(suppliers, ({one, many}) => ({
-	businessPartner: one(businessPartners, {
-		fields: [suppliers.idBusinessPartners],
-		references: [businessPartners.id]
-	}),
-	scaleTickets: many(scaleTickets),
-	buyingStationsSuppliers: many(buyingStationsSuppliers),
-}));
-
-export const clientsRelations = relations(clients, ({one, many}) => ({
-	businessPartner: one(businessPartners, {
-		fields: [clients.idBusinessPartners],
-		references: [businessPartners.id]
-	}),
-	scaleTickets: many(scaleTickets),
 }));
 
 export const driversRelations = relations(drivers, ({one, many}) => ({
@@ -1024,6 +1432,23 @@ export const carriersRelations = relations(carriers, ({one, many}) => ({
 	driversCarriers: many(driversCarriers),
 }));
 
+export const suppliersRelations = relations(suppliers, ({one, many}) => ({
+	businessPartner: one(businessPartners, {
+		fields: [suppliers.idBusinessPartners],
+		references: [businessPartners.id]
+	}),
+	scaleTickets: many(scaleTickets),
+	buyingStationsSuppliers: many(buyingStationsSuppliers),
+}));
+
+export const clientsRelations = relations(clients, ({one, many}) => ({
+	businessPartner: one(businessPartners, {
+		fields: [clients.idBusinessPartners],
+		references: [businessPartners.id]
+	}),
+	scaleTickets: many(scaleTickets),
+}));
+
 export const trucksRelations = relations(trucks, ({one, many}) => ({
 	carrier: one(carriers, {
 		fields: [trucks.idBusinessPartnersCarriers],
@@ -1045,13 +1470,13 @@ export const scaleTicketsDocumentTypesRelations = relations(scaleTicketsDocument
 		fields: [scaleTicketsDocumentTypes.idDocumentTypes],
 		references: [documentTypes.id]
 	}),
-	scaleTicket: one(scaleTickets, {
-		fields: [scaleTicketsDocumentTypes.idScaleTickets],
-		references: [scaleTickets.id]
-	}),
 	businessPartner: one(businessPartners, {
 		fields: [scaleTicketsDocumentTypes.idBusinessPartners],
 		references: [businessPartners.id]
+	}),
+	scaleTicket: one(scaleTickets, {
+		fields: [scaleTicketsDocumentTypes.idScaleTickets],
+		references: [scaleTickets.id]
 	}),
 }));
 
@@ -1061,6 +1486,10 @@ export const documentTypesRelations = relations(documentTypes, ({many}) => ({
 
 export const scaleTicketsRelations = relations(scaleTickets, ({one, many}) => ({
 	scaleTicketsDocumentTypes: many(scaleTicketsDocumentTypes),
+	scaleTicketStatus: one(scaleTicketStatus, {
+		fields: [scaleTickets.idScaleTicketStatus],
+		references: [scaleTicketStatus.id]
+	}),
 	buyingStation_idBuyingStations: one(buyingStations, {
 		fields: [scaleTickets.idBuyingStations],
 		references: [buyingStations.id],
@@ -1108,24 +1537,17 @@ export const scaleTicketsRelations = relations(scaleTickets, ({one, many}) => ({
 		references: [buyingStations.id],
 		relationName: "scaleTickets_idBuyingStationsDestination_buyingStations_id"
 	}),
-	scaleTicketStatus: one(scaleTicketStatus, {
-		fields: [scaleTickets.idScaleTicketStatus],
-		references: [scaleTicketStatus.id]
-	}),
 	scaleTicketDetails: many(scaleTicketDetails),
 }));
 
-export const productsRelations = relations(products, ({one, many}) => ({
-	productType: one(productTypes, {
-		fields: [products.idProductTypes],
-		references: [productTypes.id]
-	}),
-	scaleTicketDetails: many(scaleTicketDetails),
+export const scaleTicketStatusRelations = relations(scaleTicketStatus, ({many}) => ({
+	scaleTickets: many(scaleTickets),
 }));
 
-export const productTypesRelations = relations(productTypes, ({many}) => ({
-	products: many(products),
+export const operationsRelations = relations(operations, ({many}) => ({
+	scaleTickets: many(scaleTickets),
 	operationsProductTypes: many(operationsProductTypes),
+	bpRolesOperations: many(bpRolesOperations),
 }));
 
 export const scaleTicketsDetailsPackagingTypesRelations = relations(scaleTicketsDetailsPackagingTypes, ({one}) => ({
@@ -1141,6 +1563,10 @@ export const scaleTicketsDetailsPackagingTypesRelations = relations(scaleTickets
 
 export const scaleTicketDetailsRelations = relations(scaleTicketDetails, ({one, many}) => ({
 	scaleTicketsDetailsPackagingTypes: many(scaleTicketsDetailsPackagingTypes),
+	product: one(products, {
+		fields: [scaleTicketDetails.idProducts],
+		references: [products.id]
+	}),
 	scaleTicket: one(scaleTickets, {
 		fields: [scaleTicketDetails.idScaleTickets],
 		references: [scaleTickets.id]
@@ -1149,66 +1575,10 @@ export const scaleTicketDetailsRelations = relations(scaleTicketDetails, ({one, 
 		fields: [scaleTicketDetails.idScales],
 		references: [scales.id]
 	}),
-	product: one(products, {
-		fields: [scaleTicketDetails.idProducts],
-		references: [products.id]
-	}),
 }));
 
 export const packagingTypesRelations = relations(packagingTypes, ({many}) => ({
 	scaleTicketsDetailsPackagingTypes: many(scaleTicketsDetailsPackagingTypes),
-}));
-
-export const employeesRelations = relations(employees, ({one, many}) => ({
-	user: one(users, {
-		fields: [employees.idUsers],
-		references: [users.id]
-	}),
-	position: one(position, {
-		fields: [employees.idPosition],
-		references: [position.id]
-	}),
-	department: one(department, {
-		fields: [employees.idDepartment],
-		references: [department.id]
-	}),
-	gender: one(gender, {
-		fields: [employees.idGender],
-		references: [gender.id]
-	}),
-	identityDocumentType: one(identityDocumentTypes, {
-		fields: [employees.idIdentityDocumentTypes],
-		references: [identityDocumentTypes.id]
-	}),
-	scaleTickets: many(scaleTickets),
-	employeesBuyingStations: many(employeesBuyingStations),
-}));
-
-export const usersRelations = relations(users, ({many}) => ({
-	employees: many(employees),
-	usersRoles: many(usersRoles),
-}));
-
-export const positionRelations = relations(position, ({many}) => ({
-	employees: many(employees),
-}));
-
-export const departmentRelations = relations(department, ({many}) => ({
-	employees: many(employees),
-}));
-
-export const genderRelations = relations(gender, ({many}) => ({
-	employees: many(employees),
-}));
-
-export const operationsRelations = relations(operations, ({many}) => ({
-	scaleTickets: many(scaleTickets),
-	bpRolesOperations: many(bpRolesOperations),
-	operationsProductTypes: many(operationsProductTypes),
-}));
-
-export const scaleTicketStatusRelations = relations(scaleTicketStatus, ({many}) => ({
-	scaleTickets: many(scaleTickets),
 }));
 
 export const usersRolesRelations = relations(usersRoles, ({one}) => ({
@@ -1242,6 +1612,17 @@ export const permissionsRelations = relations(permissions, ({many}) => ({
 	rolesPermissions: many(rolesPermissions),
 }));
 
+export const operationsProductTypesRelations = relations(operationsProductTypes, ({one}) => ({
+	productType: one(productTypes, {
+		fields: [operationsProductTypes.idProductTypes],
+		references: [productTypes.id]
+	}),
+	operation: one(operations, {
+		fields: [operationsProductTypes.idOperations],
+		references: [operations.id]
+	}),
+}));
+
 export const buyingStationsSuppliersRelations = relations(buyingStationsSuppliers, ({one}) => ({
 	buyingStation: one(buyingStations, {
 		fields: [buyingStationsSuppliers.idBuyingStations],
@@ -1254,30 +1635,19 @@ export const buyingStationsSuppliersRelations = relations(buyingStationsSupplier
 }));
 
 export const bpRolesOperationsRelations = relations(bpRolesOperations, ({one}) => ({
-	operation: one(operations, {
-		fields: [bpRolesOperations.idOperations],
-		references: [operations.id]
-	}),
 	bpRole: one(bpRoles, {
 		fields: [bpRolesOperations.idBpRoles],
 		references: [bpRoles.id]
+	}),
+	operation: one(operations, {
+		fields: [bpRolesOperations.idOperations],
+		references: [operations.id]
 	}),
 }));
 
 export const bpRolesRelations = relations(bpRoles, ({many}) => ({
 	bpRolesOperations: many(bpRolesOperations),
 	businessPartnersBpRoles: many(businessPartnersBpRoles),
-}));
-
-export const operationsProductTypesRelations = relations(operationsProductTypes, ({one}) => ({
-	operation: one(operations, {
-		fields: [operationsProductTypes.idOperations],
-		references: [operations.id]
-	}),
-	productType: one(productTypes, {
-		fields: [operationsProductTypes.idProductTypes],
-		references: [productTypes.id]
-	}),
 }));
 
 export const employeesBuyingStationsRelations = relations(employeesBuyingStations, ({one}) => ({
@@ -1303,13 +1673,13 @@ export const businessPartnersBpRolesRelations = relations(businessPartnersBpRole
 }));
 
 export const driversCarriersRelations = relations(driversCarriers, ({one}) => ({
-	carrier: one(carriers, {
-		fields: [driversCarriers.idBusinessPartnersCarriers],
-		references: [carriers.idBusinessPartners]
-	}),
 	driver: one(drivers, {
 		fields: [driversCarriers.idBusinessPartnersDrivers],
 		references: [drivers.idBusinessPartners]
+	}),
+	carrier: one(carriers, {
+		fields: [driversCarriers.idBusinessPartnersCarriers],
+		references: [carriers.idBusinessPartners]
 	}),
 }));
 

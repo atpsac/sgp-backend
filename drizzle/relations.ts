@@ -1,5 +1,76 @@
 import { relations } from "drizzle-orm/relations";
-import { buyingStations, scales, scaleTypes, scaleStatus, ubigeos, identityDocumentTypes, businessPartners, suppliers, clients, drivers, licenseTypes, carriers, trucks, trailers, documentTypes, scaleTicketsDocumentTypes, scaleTickets, productTypes, products, scaleTicketDetails, scaleTicketsDetailsPackagingTypes, packagingTypes, users, employees, position, department, gender, operations, scaleTicketStatus, usersRoles, roles, rolesPermissions, permissions, buyingStationsSuppliers, bpRolesOperations, bpRoles, operationsProductTypes, employeesBuyingStations, businessPartnersBpRoles, driversCarriers } from "./schema";
+import { users, employees, position, department, gender, identityDocumentTypes, ubigeos, buyingStations, scales, scaleTypes, scaleStatus, productTypes, products, businessPartners, drivers, licenseTypes, carriers, suppliers, clients, trucks, trailers, documentTypes, scaleTicketsDocumentTypes, scaleTickets, scaleTicketStatus, operations, scaleTicketDetails, scaleTicketsDetailsPackagingTypes, packagingTypes, usersRoles, roles, rolesPermissions, permissions, operationsProductTypes, buyingStationsSuppliers, bpRoles, bpRolesOperations, employeesBuyingStations, businessPartnersBpRoles, driversCarriers } from "./schema";
+
+export const employeesRelations = relations(employees, ({one, many}) => ({
+	user: one(users, {
+		fields: [employees.idUsers],
+		references: [users.id]
+	}),
+	position: one(position, {
+		fields: [employees.idPosition],
+		references: [position.id]
+	}),
+	department: one(department, {
+		fields: [employees.idDepartment],
+		references: [department.id]
+	}),
+	gender: one(gender, {
+		fields: [employees.idGender],
+		references: [gender.id]
+	}),
+	identityDocumentType: one(identityDocumentTypes, {
+		fields: [employees.idIdentityDocumentTypes],
+		references: [identityDocumentTypes.id]
+	}),
+	scaleTickets: many(scaleTickets),
+	employeesBuyingStations: many(employeesBuyingStations),
+}));
+
+export const usersRelations = relations(users, ({many}) => ({
+	employees: many(employees),
+	usersRoles: many(usersRoles),
+}));
+
+export const positionRelations = relations(position, ({many}) => ({
+	employees: many(employees),
+}));
+
+export const departmentRelations = relations(department, ({many}) => ({
+	employees: many(employees),
+}));
+
+export const genderRelations = relations(gender, ({many}) => ({
+	employees: many(employees),
+}));
+
+export const identityDocumentTypesRelations = relations(identityDocumentTypes, ({many}) => ({
+	employees: many(employees),
+	businessPartners: many(businessPartners),
+}));
+
+export const buyingStationsRelations = relations(buyingStations, ({one, many}) => ({
+	ubigeo: one(ubigeos, {
+		fields: [buyingStations.idUbigeos],
+		references: [ubigeos.id]
+	}),
+	scales: many(scales),
+	scaleTickets_idBuyingStations: many(scaleTickets, {
+		relationName: "scaleTickets_idBuyingStations_buyingStations_id"
+	}),
+	scaleTickets_idBuyingStationsOrigin: many(scaleTickets, {
+		relationName: "scaleTickets_idBuyingStationsOrigin_buyingStations_id"
+	}),
+	scaleTickets_idBuyingStationsDestination: many(scaleTickets, {
+		relationName: "scaleTickets_idBuyingStationsDestination_buyingStations_id"
+	}),
+	buyingStationsSuppliers: many(buyingStationsSuppliers),
+	employeesBuyingStations: many(employeesBuyingStations),
+}));
+
+export const ubigeosRelations = relations(ubigeos, ({many}) => ({
+	buyingStations: many(buyingStations),
+	businessPartners: many(businessPartners),
+}));
 
 export const scalesRelations = relations(scales, ({one, many}) => ({
 	buyingStation: one(buyingStations, {
@@ -17,25 +88,6 @@ export const scalesRelations = relations(scales, ({one, many}) => ({
 	scaleTicketDetails: many(scaleTicketDetails),
 }));
 
-export const buyingStationsRelations = relations(buyingStations, ({one, many}) => ({
-	scales: many(scales),
-	ubigeo: one(ubigeos, {
-		fields: [buyingStations.idUbigeos],
-		references: [ubigeos.id]
-	}),
-	scaleTickets_idBuyingStations: many(scaleTickets, {
-		relationName: "scaleTickets_idBuyingStations_buyingStations_id"
-	}),
-	scaleTickets_idBuyingStationsOrigin: many(scaleTickets, {
-		relationName: "scaleTickets_idBuyingStationsOrigin_buyingStations_id"
-	}),
-	scaleTickets_idBuyingStationsDestination: many(scaleTickets, {
-		relationName: "scaleTickets_idBuyingStationsDestination_buyingStations_id"
-	}),
-	buyingStationsSuppliers: many(buyingStationsSuppliers),
-	employeesBuyingStations: many(employeesBuyingStations),
-}));
-
 export const scaleTypesRelations = relations(scaleTypes, ({many}) => ({
 	scales: many(scales),
 }));
@@ -44,48 +96,34 @@ export const scaleStatusRelations = relations(scaleStatus, ({many}) => ({
 	scales: many(scales),
 }));
 
-export const ubigeosRelations = relations(ubigeos, ({many}) => ({
-	buyingStations: many(buyingStations),
-	businessPartners: many(businessPartners),
+export const productsRelations = relations(products, ({one, many}) => ({
+	productType: one(productTypes, {
+		fields: [products.idProductTypes],
+		references: [productTypes.id]
+	}),
+	scaleTicketDetails: many(scaleTicketDetails),
+}));
+
+export const productTypesRelations = relations(productTypes, ({many}) => ({
+	products: many(products),
+	operationsProductTypes: many(operationsProductTypes),
 }));
 
 export const businessPartnersRelations = relations(businessPartners, ({one, many}) => ({
-	identityDocumentType: one(identityDocumentTypes, {
-		fields: [businessPartners.idIdentityDocumentTypes],
-		references: [identityDocumentTypes.id]
-	}),
 	ubigeo: one(ubigeos, {
 		fields: [businessPartners.idUbigeos],
 		references: [ubigeos.id]
 	}),
-	suppliers: many(suppliers),
-	clients: many(clients),
+	identityDocumentType: one(identityDocumentTypes, {
+		fields: [businessPartners.idIdentityDocumentTypes],
+		references: [identityDocumentTypes.id]
+	}),
 	drivers: many(drivers),
 	carriers: many(carriers),
+	suppliers: many(suppliers),
+	clients: many(clients),
 	scaleTicketsDocumentTypes: many(scaleTicketsDocumentTypes),
 	businessPartnersBpRoles: many(businessPartnersBpRoles),
-}));
-
-export const identityDocumentTypesRelations = relations(identityDocumentTypes, ({many}) => ({
-	businessPartners: many(businessPartners),
-	employees: many(employees),
-}));
-
-export const suppliersRelations = relations(suppliers, ({one, many}) => ({
-	businessPartner: one(businessPartners, {
-		fields: [suppliers.idBusinessPartners],
-		references: [businessPartners.id]
-	}),
-	scaleTickets: many(scaleTickets),
-	buyingStationsSuppliers: many(buyingStationsSuppliers),
-}));
-
-export const clientsRelations = relations(clients, ({one, many}) => ({
-	businessPartner: one(businessPartners, {
-		fields: [clients.idBusinessPartners],
-		references: [businessPartners.id]
-	}),
-	scaleTickets: many(scaleTickets),
 }));
 
 export const driversRelations = relations(drivers, ({one, many}) => ({
@@ -116,6 +154,23 @@ export const carriersRelations = relations(carriers, ({one, many}) => ({
 	driversCarriers: many(driversCarriers),
 }));
 
+export const suppliersRelations = relations(suppliers, ({one, many}) => ({
+	businessPartner: one(businessPartners, {
+		fields: [suppliers.idBusinessPartners],
+		references: [businessPartners.id]
+	}),
+	scaleTickets: many(scaleTickets),
+	buyingStationsSuppliers: many(buyingStationsSuppliers),
+}));
+
+export const clientsRelations = relations(clients, ({one, many}) => ({
+	businessPartner: one(businessPartners, {
+		fields: [clients.idBusinessPartners],
+		references: [businessPartners.id]
+	}),
+	scaleTickets: many(scaleTickets),
+}));
+
 export const trucksRelations = relations(trucks, ({one, many}) => ({
 	carrier: one(carriers, {
 		fields: [trucks.idBusinessPartnersCarriers],
@@ -137,13 +192,13 @@ export const scaleTicketsDocumentTypesRelations = relations(scaleTicketsDocument
 		fields: [scaleTicketsDocumentTypes.idDocumentTypes],
 		references: [documentTypes.id]
 	}),
-	scaleTicket: one(scaleTickets, {
-		fields: [scaleTicketsDocumentTypes.idScaleTickets],
-		references: [scaleTickets.id]
-	}),
 	businessPartner: one(businessPartners, {
 		fields: [scaleTicketsDocumentTypes.idBusinessPartners],
 		references: [businessPartners.id]
+	}),
+	scaleTicket: one(scaleTickets, {
+		fields: [scaleTicketsDocumentTypes.idScaleTickets],
+		references: [scaleTickets.id]
 	}),
 }));
 
@@ -153,6 +208,10 @@ export const documentTypesRelations = relations(documentTypes, ({many}) => ({
 
 export const scaleTicketsRelations = relations(scaleTickets, ({one, many}) => ({
 	scaleTicketsDocumentTypes: many(scaleTicketsDocumentTypes),
+	scaleTicketStatus: one(scaleTicketStatus, {
+		fields: [scaleTickets.idScaleTicketStatus],
+		references: [scaleTicketStatus.id]
+	}),
 	buyingStation_idBuyingStations: one(buyingStations, {
 		fields: [scaleTickets.idBuyingStations],
 		references: [buyingStations.id],
@@ -200,24 +259,17 @@ export const scaleTicketsRelations = relations(scaleTickets, ({one, many}) => ({
 		references: [buyingStations.id],
 		relationName: "scaleTickets_idBuyingStationsDestination_buyingStations_id"
 	}),
-	scaleTicketStatus: one(scaleTicketStatus, {
-		fields: [scaleTickets.idScaleTicketStatus],
-		references: [scaleTicketStatus.id]
-	}),
 	scaleTicketDetails: many(scaleTicketDetails),
 }));
 
-export const productsRelations = relations(products, ({one, many}) => ({
-	productType: one(productTypes, {
-		fields: [products.idProductTypes],
-		references: [productTypes.id]
-	}),
-	scaleTicketDetails: many(scaleTicketDetails),
+export const scaleTicketStatusRelations = relations(scaleTicketStatus, ({many}) => ({
+	scaleTickets: many(scaleTickets),
 }));
 
-export const productTypesRelations = relations(productTypes, ({many}) => ({
-	products: many(products),
+export const operationsRelations = relations(operations, ({many}) => ({
+	scaleTickets: many(scaleTickets),
 	operationsProductTypes: many(operationsProductTypes),
+	bpRolesOperations: many(bpRolesOperations),
 }));
 
 export const scaleTicketsDetailsPackagingTypesRelations = relations(scaleTicketsDetailsPackagingTypes, ({one}) => ({
@@ -233,6 +285,10 @@ export const scaleTicketsDetailsPackagingTypesRelations = relations(scaleTickets
 
 export const scaleTicketDetailsRelations = relations(scaleTicketDetails, ({one, many}) => ({
 	scaleTicketsDetailsPackagingTypes: many(scaleTicketsDetailsPackagingTypes),
+	product: one(products, {
+		fields: [scaleTicketDetails.idProducts],
+		references: [products.id]
+	}),
 	scaleTicket: one(scaleTickets, {
 		fields: [scaleTicketDetails.idScaleTickets],
 		references: [scaleTickets.id]
@@ -241,66 +297,10 @@ export const scaleTicketDetailsRelations = relations(scaleTicketDetails, ({one, 
 		fields: [scaleTicketDetails.idScales],
 		references: [scales.id]
 	}),
-	product: one(products, {
-		fields: [scaleTicketDetails.idProducts],
-		references: [products.id]
-	}),
 }));
 
 export const packagingTypesRelations = relations(packagingTypes, ({many}) => ({
 	scaleTicketsDetailsPackagingTypes: many(scaleTicketsDetailsPackagingTypes),
-}));
-
-export const employeesRelations = relations(employees, ({one, many}) => ({
-	user: one(users, {
-		fields: [employees.idUsers],
-		references: [users.id]
-	}),
-	position: one(position, {
-		fields: [employees.idPosition],
-		references: [position.id]
-	}),
-	department: one(department, {
-		fields: [employees.idDepartment],
-		references: [department.id]
-	}),
-	gender: one(gender, {
-		fields: [employees.idGender],
-		references: [gender.id]
-	}),
-	identityDocumentType: one(identityDocumentTypes, {
-		fields: [employees.idIdentityDocumentTypes],
-		references: [identityDocumentTypes.id]
-	}),
-	scaleTickets: many(scaleTickets),
-	employeesBuyingStations: many(employeesBuyingStations),
-}));
-
-export const usersRelations = relations(users, ({many}) => ({
-	employees: many(employees),
-	usersRoles: many(usersRoles),
-}));
-
-export const positionRelations = relations(position, ({many}) => ({
-	employees: many(employees),
-}));
-
-export const departmentRelations = relations(department, ({many}) => ({
-	employees: many(employees),
-}));
-
-export const genderRelations = relations(gender, ({many}) => ({
-	employees: many(employees),
-}));
-
-export const operationsRelations = relations(operations, ({many}) => ({
-	scaleTickets: many(scaleTickets),
-	bpRolesOperations: many(bpRolesOperations),
-	operationsProductTypes: many(operationsProductTypes),
-}));
-
-export const scaleTicketStatusRelations = relations(scaleTicketStatus, ({many}) => ({
-	scaleTickets: many(scaleTickets),
 }));
 
 export const usersRolesRelations = relations(usersRoles, ({one}) => ({
@@ -334,6 +334,17 @@ export const permissionsRelations = relations(permissions, ({many}) => ({
 	rolesPermissions: many(rolesPermissions),
 }));
 
+export const operationsProductTypesRelations = relations(operationsProductTypes, ({one}) => ({
+	productType: one(productTypes, {
+		fields: [operationsProductTypes.idProductTypes],
+		references: [productTypes.id]
+	}),
+	operation: one(operations, {
+		fields: [operationsProductTypes.idOperations],
+		references: [operations.id]
+	}),
+}));
+
 export const buyingStationsSuppliersRelations = relations(buyingStationsSuppliers, ({one}) => ({
 	buyingStation: one(buyingStations, {
 		fields: [buyingStationsSuppliers.idBuyingStations],
@@ -346,30 +357,19 @@ export const buyingStationsSuppliersRelations = relations(buyingStationsSupplier
 }));
 
 export const bpRolesOperationsRelations = relations(bpRolesOperations, ({one}) => ({
-	operation: one(operations, {
-		fields: [bpRolesOperations.idOperations],
-		references: [operations.id]
-	}),
 	bpRole: one(bpRoles, {
 		fields: [bpRolesOperations.idBpRoles],
 		references: [bpRoles.id]
+	}),
+	operation: one(operations, {
+		fields: [bpRolesOperations.idOperations],
+		references: [operations.id]
 	}),
 }));
 
 export const bpRolesRelations = relations(bpRoles, ({many}) => ({
 	bpRolesOperations: many(bpRolesOperations),
 	businessPartnersBpRoles: many(businessPartnersBpRoles),
-}));
-
-export const operationsProductTypesRelations = relations(operationsProductTypes, ({one}) => ({
-	operation: one(operations, {
-		fields: [operationsProductTypes.idOperations],
-		references: [operations.id]
-	}),
-	productType: one(productTypes, {
-		fields: [operationsProductTypes.idProductTypes],
-		references: [productTypes.id]
-	}),
 }));
 
 export const employeesBuyingStationsRelations = relations(employeesBuyingStations, ({one}) => ({
@@ -395,12 +395,12 @@ export const businessPartnersBpRolesRelations = relations(businessPartnersBpRole
 }));
 
 export const driversCarriersRelations = relations(driversCarriers, ({one}) => ({
-	carrier: one(carriers, {
-		fields: [driversCarriers.idBusinessPartnersCarriers],
-		references: [carriers.idBusinessPartners]
-	}),
 	driver: one(drivers, {
 		fields: [driversCarriers.idBusinessPartnersDrivers],
 		references: [drivers.idBusinessPartners]
+	}),
+	carrier: one(carriers, {
+		fields: [driversCarriers.idBusinessPartnersCarriers],
+		references: [carriers.idBusinessPartners]
 	}),
 }));

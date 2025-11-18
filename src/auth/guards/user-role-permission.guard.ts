@@ -1,7 +1,6 @@
 import { BadRequestException, CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Observable } from "rxjs";
-import { DrizzleService } from "src/database/drizzle.service";
 import { META_ROLES } from "../decorators/role-protected.decorator";
 import { META_PERMISSIONS } from "../decorators/permission-protected.decorator";
 
@@ -10,7 +9,6 @@ export class UserRolePermissionGuard implements CanActivate {
 
     constructor(
         private readonly reflector: Reflector,
-        private readonly drizzleService: DrizzleService
     ) {
 
     }
