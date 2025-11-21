@@ -47,16 +47,16 @@ export const users = pgTable("users", {
 	index("idx_users_updated_at").using("btree", table.updatedAt.asc().nullsLast().op("timestamp_ops")).with({fillfactor: "90"}),
 	unique("users_email_unq").on(table.email),
 	unique("users_username_unq").on(table.username),
-	check("users_id_not_null", sql`NOT NULL id`),
-	check("users_email_not_null", sql`NOT NULL email`),
-	check("users_username_not_null", sql`NOT NULL username`),
-	check("users_password_not_null", sql`NOT NULL password`),
-	check("users_refresh_token_not_null", sql`NOT NULL refresh_token`),
 	check("users_created_at_not_null", sql`NOT NULL created_at`),
 	check("users_created_by_not_null", sql`NOT NULL created_by`),
+	check("users_email_not_null", sql`NOT NULL email`),
+	check("users_id_not_null", sql`NOT NULL id`),
+	check("users_is_active_not_null", sql`NOT NULL is_active`),
+	check("users_password_not_null", sql`NOT NULL password`),
+	check("users_refresh_token_not_null", sql`NOT NULL refresh_token`),
 	check("users_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("users_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("users_is_active_not_null", sql`NOT NULL is_active`),
+	check("users_username_not_null", sql`NOT NULL username`),
 ]);
 
 export const roles = pgTable("roles", {
@@ -72,13 +72,13 @@ export const roles = pgTable("roles", {
 	index("idx_roles_name").using("btree", table.name.asc().nullsLast().op("text_ops")).with({fillfactor: "90"}),
 	index("idx_roles_updated_at").using("btree", table.updatedAt.asc().nullsLast().op("timestamp_ops")).with({fillfactor: "90"}),
 	unique("roles_name_unq").on(table.name),
-	check("roles_id_not_null", sql`NOT NULL id`),
-	check("roles_name_not_null", sql`NOT NULL name`),
 	check("roles_created_at_not_null", sql`NOT NULL created_at`),
 	check("roles_created_by_not_null", sql`NOT NULL created_by`),
+	check("roles_id_not_null", sql`NOT NULL id`),
+	check("roles_is_active_not_null", sql`NOT NULL is_active`),
+	check("roles_name_not_null", sql`NOT NULL name`),
 	check("roles_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("roles_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("roles_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const permissions = pgTable("permissions", {
@@ -94,13 +94,13 @@ export const permissions = pgTable("permissions", {
 	index("idx_permissions_name").using("btree", table.name.asc().nullsLast().op("text_ops")).with({fillfactor: "90"}),
 	index("idx_permissions_updated_at").using("btree", table.updatedAt.asc().nullsLast().op("timestamp_ops")).with({fillfactor: "90"}),
 	unique("permissions_name_unq").on(table.name),
-	check("permissions_id_not_null", sql`NOT NULL id`),
-	check("permissions_name_not_null", sql`NOT NULL name`),
 	check("permissions_created_at_not_null", sql`NOT NULL created_at`),
 	check("permissions_created_by_not_null", sql`NOT NULL created_by`),
+	check("permissions_id_not_null", sql`NOT NULL id`),
+	check("permissions_is_active_not_null", sql`NOT NULL is_active`),
+	check("permissions_name_not_null", sql`NOT NULL name`),
 	check("permissions_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("permissions_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("permissions_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const employees = pgTable("employees", {
@@ -125,16 +125,6 @@ export const employees = pgTable("employees", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idUsers],
-			foreignColumns: [users.id],
-			name: "users_fk"
-		}).onUpdate("cascade").onDelete("set null"),
-	foreignKey({
-			columns: [table.idPosition],
-			foreignColumns: [position.id],
-			name: "position_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
 			columns: [table.idDepartment],
 			foreignColumns: [department.id],
 			name: "department_fk"
@@ -149,25 +139,35 @@ export const employees = pgTable("employees", {
 			foreignColumns: [identityDocumentTypes.id],
 			name: "identity_document_types_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idPosition],
+			foreignColumns: [position.id],
+			name: "position_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idUsers],
+			foreignColumns: [users.id],
+			name: "users_fk"
+		}).onUpdate("cascade").onDelete("set null"),
 	unique("employees_document_number_unq").on(table.documentNumber),
 	unique("employees_uq").on(table.idUsers),
-	check("employees_id_not_null", sql`NOT NULL id`),
-	check("employees_id_identity_document_types_not_null", sql`NOT NULL id_identity_document_types`),
-	check("employees_id_gender_not_null", sql`NOT NULL id_gender`),
-	check("employees_id_position_not_null", sql`NOT NULL id_position`),
-	check("employees_id_department_not_null", sql`NOT NULL id_department`),
-	check("employees_first_name_not_null", sql`NOT NULL first_name`),
-	check("employees_f_lastname_not_null", sql`NOT NULL f_lastname`),
-	check("employees_m_lastname_not_null", sql`NOT NULL m_lastname`),
-	check("employees_birthdate_not_null", sql`NOT NULL birthdate`),
-	check("employees_document_number_not_null", sql`NOT NULL document_number`),
 	check("employees_affiliation_date_not_null", sql`NOT NULL affiliation_date`),
-	check("employees_termination_date_not_null", sql`NOT NULL termination_date`),
+	check("employees_birthdate_not_null", sql`NOT NULL birthdate`),
 	check("employees_created_at_not_null", sql`NOT NULL created_at`),
 	check("employees_created_by_not_null", sql`NOT NULL created_by`),
+	check("employees_document_number_not_null", sql`NOT NULL document_number`),
+	check("employees_f_lastname_not_null", sql`NOT NULL f_lastname`),
+	check("employees_first_name_not_null", sql`NOT NULL first_name`),
+	check("employees_id_department_not_null", sql`NOT NULL id_department`),
+	check("employees_id_gender_not_null", sql`NOT NULL id_gender`),
+	check("employees_id_identity_document_types_not_null", sql`NOT NULL id_identity_document_types`),
+	check("employees_id_not_null", sql`NOT NULL id`),
+	check("employees_id_position_not_null", sql`NOT NULL id_position`),
+	check("employees_is_active_not_null", sql`NOT NULL is_active`),
+	check("employees_m_lastname_not_null", sql`NOT NULL m_lastname`),
+	check("employees_termination_date_not_null", sql`NOT NULL termination_date`),
 	check("employees_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("employees_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("employees_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const buyingStations = pgTable("buying_stations", {
@@ -188,16 +188,16 @@ export const buyingStations = pgTable("buying_stations", {
 			name: "ubigeos_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	unique("buying_stations_name_unq").on(table.name),
-	check("buying_stations_id_not_null", sql`NOT NULL id`),
-	check("buying_stations_id_ubigeos_not_null", sql`NOT NULL id_ubigeos`),
-	check("buying_stations_name_not_null", sql`NOT NULL name`),
 	check("buying_stations_address_not_null", sql`NOT NULL address`),
-	check("buying_stations_is_principal_not_null", sql`NOT NULL is_principal`),
 	check("buying_stations_created_at_not_null", sql`NOT NULL created_at`),
 	check("buying_stations_created_by_not_null", sql`NOT NULL created_by`),
+	check("buying_stations_id_not_null", sql`NOT NULL id`),
+	check("buying_stations_id_ubigeos_not_null", sql`NOT NULL id_ubigeos`),
+	check("buying_stations_is_active_not_null", sql`NOT NULL is_active`),
+	check("buying_stations_is_principal_not_null", sql`NOT NULL is_principal`),
+	check("buying_stations_name_not_null", sql`NOT NULL name`),
 	check("buying_stations_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("buying_stations_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("buying_stations_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const ubigeos = pgTable("ubigeos", {
@@ -216,19 +216,19 @@ export const ubigeos = pgTable("ubigeos", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("ubigeo_code_unq").on(table.code),
-	check("ubigeos_id_not_null", sql`NOT NULL id`),
 	check("ubigeos_code_not_null", sql`NOT NULL code`),
-	check("ubigeos_region_code_not_null", sql`NOT NULL region_code`),
-	check("ubigeos_region_not_null", sql`NOT NULL region`),
-	check("ubigeos_province_code_not_null", sql`NOT NULL province_code`),
-	check("ubigeos_province_not_null", sql`NOT NULL province`),
-	check("ubigeos_district_code_not_null", sql`NOT NULL district_code`),
-	check("ubigeos_district_not_null", sql`NOT NULL district`),
 	check("ubigeos_created_at_not_null", sql`NOT NULL created_at`),
 	check("ubigeos_created_by_not_null", sql`NOT NULL created_by`),
+	check("ubigeos_district_code_not_null", sql`NOT NULL district_code`),
+	check("ubigeos_district_not_null", sql`NOT NULL district`),
+	check("ubigeos_id_not_null", sql`NOT NULL id`),
+	check("ubigeos_is_active_not_null", sql`NOT NULL is_active`),
+	check("ubigeos_province_code_not_null", sql`NOT NULL province_code`),
+	check("ubigeos_province_not_null", sql`NOT NULL province`),
+	check("ubigeos_region_code_not_null", sql`NOT NULL region_code`),
+	check("ubigeos_region_not_null", sql`NOT NULL region`),
 	check("ubigeos_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("ubigeos_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("ubigeos_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const identityDocumentTypes = pgTable("identity_document_types", {
@@ -243,18 +243,18 @@ export const identityDocumentTypes = pgTable("identity_document_types", {
 	updatedBy: integer("updated_by").notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
-	unique("identity_document_types_name_unq").on(table.name),
 	unique("identity_document_types_code_unq").on(table.code),
-	check("identity_document_types_id_not_null", sql`NOT NULL id`),
-	check("identity_document_types_name_not_null", sql`NOT NULL name`),
+	unique("identity_document_types_name_unq").on(table.name),
 	check("identity_document_types_code_not_null", sql`NOT NULL code`),
-	check("identity_document_types_description_not_null", sql`NOT NULL description`),
-	check("identity_document_types_length_not_null", sql`NOT NULL length`),
 	check("identity_document_types_created_at_not_null", sql`NOT NULL created_at`),
 	check("identity_document_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("identity_document_types_description_not_null", sql`NOT NULL description`),
+	check("identity_document_types_id_not_null", sql`NOT NULL id`),
+	check("identity_document_types_is_active_not_null", sql`NOT NULL is_active`),
+	check("identity_document_types_length_not_null", sql`NOT NULL length`),
+	check("identity_document_types_name_not_null", sql`NOT NULL name`),
 	check("identity_document_types_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("identity_document_types_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("identity_document_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const department = pgTable("department", {
@@ -268,14 +268,14 @@ export const department = pgTable("department", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("department_name_unq").on(table.name),
-	check("department_id_not_null", sql`NOT NULL id`),
-	check("department_name_not_null", sql`NOT NULL name`),
-	check("department_description_not_null", sql`NOT NULL description`),
 	check("department_created_at_not_null", sql`NOT NULL created_at`),
 	check("department_created_by_not_null", sql`NOT NULL created_by`),
+	check("department_description_not_null", sql`NOT NULL description`),
+	check("department_id_not_null", sql`NOT NULL id`),
+	check("department_is_active_not_null", sql`NOT NULL is_active`),
+	check("department_name_not_null", sql`NOT NULL name`),
 	check("department_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("department_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("department_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const gender = pgTable("gender", {
@@ -289,14 +289,14 @@ export const gender = pgTable("gender", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("gender_name_unq").on(table.name),
-	check("gender_id_not_null", sql`NOT NULL id`),
-	check("gender_name_not_null", sql`NOT NULL name`),
-	check("gender_description_not_null", sql`NOT NULL description`),
 	check("gender_created_at_not_null", sql`NOT NULL created_at`),
 	check("gender_created_by_not_null", sql`NOT NULL created_by`),
+	check("gender_description_not_null", sql`NOT NULL description`),
+	check("gender_id_not_null", sql`NOT NULL id`),
+	check("gender_is_active_not_null", sql`NOT NULL is_active`),
+	check("gender_name_not_null", sql`NOT NULL name`),
 	check("gender_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("gender_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("gender_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const position = pgTable("position", {
@@ -310,14 +310,14 @@ export const position = pgTable("position", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("position_name_unq").on(table.name),
-	check("position_id_not_null", sql`NOT NULL id`),
-	check("position_name_not_null", sql`NOT NULL name`),
-	check("position_description_not_null", sql`NOT NULL description`),
 	check("position_created_at_not_null", sql`NOT NULL created_at`),
 	check("position_created_by_not_null", sql`NOT NULL created_by`),
+	check("position_description_not_null", sql`NOT NULL description`),
+	check("position_id_not_null", sql`NOT NULL id`),
+	check("position_is_active_not_null", sql`NOT NULL is_active`),
+	check("position_name_not_null", sql`NOT NULL name`),
 	check("position_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("position_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("position_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const productTypes = pgTable("product_types", {
@@ -331,14 +331,14 @@ export const productTypes = pgTable("product_types", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("product_types_name_unq").on(table.name),
-	check("product_types_id_not_null", sql`NOT NULL id`),
-	check("product_types_name_not_null", sql`NOT NULL name`),
-	check("product_types_description_not_null", sql`NOT NULL description`),
 	check("product_types_created_at_not_null", sql`NOT NULL created_at`),
 	check("product_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("product_types_description_not_null", sql`NOT NULL description`),
+	check("product_types_id_not_null", sql`NOT NULL id`),
+	check("product_types_is_active_not_null", sql`NOT NULL is_active`),
+	check("product_types_name_not_null", sql`NOT NULL name`),
 	check("product_types_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("product_types_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("product_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scales = pgTable("scales", {
@@ -362,28 +362,28 @@ export const scales = pgTable("scales", {
 			name: "buying_stations_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
-			columns: [table.idScaleTypes],
-			foreignColumns: [scaleTypes.id],
-			name: "scale_types_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
 			columns: [table.idScaleStatus],
 			foreignColumns: [scaleStatus.id],
 			name: "scale_status_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idScaleTypes],
+			foreignColumns: [scaleTypes.id],
+			name: "scale_types_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
 	check("scales_brand_not_null", sql`NOT NULL brand`),
-	check("scales_model_not_null", sql`NOT NULL model`),
-	check("scales_id_not_null", sql`NOT NULL id`),
-	check("scales_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
-	check("scales_id_scale_types_not_null", sql`NOT NULL id_scale_types`),
-	check("scales_id_scale_status_not_null", sql`NOT NULL id_scale_status`),
-	check("scales_serial_number_not_null", sql`NOT NULL serial_number`),
-	check("scales_max_capacity_not_null", sql`NOT NULL max_capacity`),
 	check("scales_created_at_not_null", sql`NOT NULL created_at`),
 	check("scales_created_by_not_null", sql`NOT NULL created_by`),
+	check("scales_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
+	check("scales_id_not_null", sql`NOT NULL id`),
+	check("scales_id_scale_status_not_null", sql`NOT NULL id_scale_status`),
+	check("scales_id_scale_types_not_null", sql`NOT NULL id_scale_types`),
+	check("scales_is_active_not_null", sql`NOT NULL is_active`),
+	check("scales_max_capacity_not_null", sql`NOT NULL max_capacity`),
+	check("scales_model_not_null", sql`NOT NULL model`),
+	check("scales_serial_number_not_null", sql`NOT NULL serial_number`),
 	check("scales_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("scales_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("scales_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleTypes = pgTable("scale_types", {
@@ -397,14 +397,14 @@ export const scaleTypes = pgTable("scale_types", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("scale_types_name_unq").on(table.name),
-	check("scale_types_id_not_null", sql`NOT NULL id`),
-	check("scale_types_name_not_null", sql`NOT NULL name`),
-	check("scale_types_description_not_null", sql`NOT NULL description`),
 	check("scale_types_created_at_not_null", sql`NOT NULL created_at`),
 	check("scale_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_types_description_not_null", sql`NOT NULL description`),
+	check("scale_types_id_not_null", sql`NOT NULL id`),
+	check("scale_types_is_active_not_null", sql`NOT NULL is_active`),
+	check("scale_types_name_not_null", sql`NOT NULL name`),
 	check("scale_types_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("scale_types_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("scale_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleStatus = pgTable("scale_status", {
@@ -418,14 +418,14 @@ export const scaleStatus = pgTable("scale_status", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("scale_status_name_unq").on(table.name),
-	check("scale_status_id_not_null", sql`NOT NULL id`),
-	check("scale_status_name_not_null", sql`NOT NULL name`),
-	check("scale_status_description_not_null", sql`NOT NULL description`),
 	check("scale_status_created_at_not_null", sql`NOT NULL created_at`),
 	check("scale_status_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_status_description_not_null", sql`NOT NULL description`),
+	check("scale_status_id_not_null", sql`NOT NULL id`),
+	check("scale_status_is_active_not_null", sql`NOT NULL is_active`),
+	check("scale_status_name_not_null", sql`NOT NULL name`),
 	check("scale_status_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("scale_status_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("scale_status_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const packagingTypes = pgTable("packaging_types", {
@@ -440,18 +440,18 @@ export const packagingTypes = pgTable("packaging_types", {
 	updatedBy: integer("updated_by").notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
-	unique("packaging_types_name_unq").on(table.name),
 	unique("packaging_types_code_unq").on(table.code),
-	check("packaging_types_id_not_null", sql`NOT NULL id`),
+	unique("packaging_types_name_unq").on(table.name),
 	check("packaging_types_code_not_null", sql`NOT NULL code`),
-	check("packaging_types_name_not_null", sql`NOT NULL name`),
-	check("packaging_types_description_not_null", sql`NOT NULL description`),
-	check("packaging_types_unit_tare_weight_not_null", sql`NOT NULL unit_tare_weight`),
 	check("packaging_types_created_at_not_null", sql`NOT NULL created_at`),
 	check("packaging_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("packaging_types_description_not_null", sql`NOT NULL description`),
+	check("packaging_types_id_not_null", sql`NOT NULL id`),
+	check("packaging_types_is_active_not_null", sql`NOT NULL is_active`),
+	check("packaging_types_name_not_null", sql`NOT NULL name`),
+	check("packaging_types_unit_tare_weight_not_null", sql`NOT NULL unit_tare_weight`),
 	check("packaging_types_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("packaging_types_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("packaging_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const products = pgTable("products", {
@@ -473,16 +473,16 @@ export const products = pgTable("products", {
 		}).onUpdate("cascade").onDelete("restrict"),
 	unique("products_code_unq").on(table.code),
 	unique("products_name_unq").on(table.name),
-	check("products_id_not_null", sql`NOT NULL id`),
-	check("products_id_product_types_not_null", sql`NOT NULL id_product_types`),
 	check("products_code_not_null", sql`NOT NULL code`),
-	check("products_name_not_null", sql`NOT NULL name`),
-	check("products_description_not_null", sql`NOT NULL description`),
 	check("products_created_at_not_null", sql`NOT NULL created_at`),
 	check("products_created_by_not_null", sql`NOT NULL created_by`),
+	check("products_description_not_null", sql`NOT NULL description`),
+	check("products_id_not_null", sql`NOT NULL id`),
+	check("products_id_product_types_not_null", sql`NOT NULL id_product_types`),
+	check("products_is_active_not_null", sql`NOT NULL is_active`),
+	check("products_name_not_null", sql`NOT NULL name`),
 	check("products_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("products_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("products_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const businessPartners = pgTable("business_partners", {
@@ -504,31 +504,31 @@ export const businessPartners = pgTable("business_partners", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idUbigeos],
-			foreignColumns: [ubigeos.id],
-			name: "ubigeos_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
 			columns: [table.idIdentityDocumentTypes],
 			foreignColumns: [identityDocumentTypes.id],
 			name: "identity_document_types_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
-	unique("business_partners_document_number_unq").on(table.documentNumber),
+	foreignKey({
+			columns: [table.idUbigeos],
+			foreignColumns: [ubigeos.id],
+			name: "ubigeos_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
 	unique("business_partners_company_name_unq").on(table.companyName),
-	check("business_partners_id_not_null", sql`NOT NULL id`),
-	check("business_partners_id_identity_document_types_not_null", sql`NOT NULL id_identity_document_types`),
-	check("business_partners_id_ubigeos_not_null", sql`NOT NULL id_ubigeos`),
-	check("business_partners_document_number_not_null", sql`NOT NULL document_number`),
-	check("business_partners_name_not_null", sql`NOT NULL name`),
-	check("business_partners_f_lastname_not_null", sql`NOT NULL f_lastname`),
-	check("business_partners_m_lastname_not_null", sql`NOT NULL m_lastname`),
-	check("business_partners_company_name_not_null", sql`NOT NULL company_name`),
+	unique("business_partners_document_number_unq").on(table.documentNumber),
 	check("business_partners_address_not_null", sql`NOT NULL address`),
+	check("business_partners_company_name_not_null", sql`NOT NULL company_name`),
 	check("business_partners_created_at_not_null", sql`NOT NULL created_at`),
 	check("business_partners_created_by_not_null", sql`NOT NULL created_by`),
+	check("business_partners_document_number_not_null", sql`NOT NULL document_number`),
+	check("business_partners_f_lastname_not_null", sql`NOT NULL f_lastname`),
+	check("business_partners_id_identity_document_types_not_null", sql`NOT NULL id_identity_document_types`),
+	check("business_partners_id_not_null", sql`NOT NULL id`),
+	check("business_partners_id_ubigeos_not_null", sql`NOT NULL id_ubigeos`),
+	check("business_partners_is_active_not_null", sql`NOT NULL is_active`),
+	check("business_partners_m_lastname_not_null", sql`NOT NULL m_lastname`),
+	check("business_partners_name_not_null", sql`NOT NULL name`),
 	check("business_partners_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("business_partners_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("business_partners_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const drivers = pgTable("drivers", {
@@ -552,14 +552,14 @@ export const drivers = pgTable("drivers", {
 			name: "license_types_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	unique("drivers_license_unq").on(table.license),
-	check("drivers_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
-	check("drivers_id_license_types_not_null", sql`NOT NULL id_license_types`),
-	check("drivers_license_not_null", sql`NOT NULL license`),
 	check("drivers_created_at_not_null", sql`NOT NULL created_at`),
 	check("drivers_created_by_not_null", sql`NOT NULL created_by`),
+	check("drivers_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("drivers_id_license_types_not_null", sql`NOT NULL id_license_types`),
+	check("drivers_is_active_not_null", sql`NOT NULL is_active`),
+	check("drivers_license_not_null", sql`NOT NULL license`),
 	check("drivers_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("drivers_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("drivers_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const carriers = pgTable("carriers", {
@@ -577,13 +577,13 @@ export const carriers = pgTable("carriers", {
 			name: "business_partners_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
 	unique("carriers_registration_number_unq").on(table.registrationNumber),
-	check("carriers_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
-	check("carriers_registration_number_not_null", sql`NOT NULL registration_number`),
 	check("carriers_created_at_not_null", sql`NOT NULL created_at`),
 	check("carriers_created_by_not_null", sql`NOT NULL created_by`),
+	check("carriers_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("carriers_is_active_not_null", sql`NOT NULL is_active`),
+	check("carriers_registration_number_not_null", sql`NOT NULL registration_number`),
 	check("carriers_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("carriers_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("carriers_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const suppliers = pgTable("suppliers", {
@@ -600,13 +600,13 @@ export const suppliers = pgTable("suppliers", {
 			foreignColumns: [businessPartners.id],
 			name: "business_partners_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
-	check("suppliers_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
-	check("suppliers_is_producer_not_null", sql`NOT NULL is_producer`),
 	check("suppliers_created_at_not_null", sql`NOT NULL created_at`),
 	check("suppliers_created_by_not_null", sql`NOT NULL created_by`),
+	check("suppliers_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("suppliers_is_active_not_null", sql`NOT NULL is_active`),
+	check("suppliers_is_producer_not_null", sql`NOT NULL is_producer`),
 	check("suppliers_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("suppliers_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("suppliers_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const clients = pgTable("clients", {
@@ -623,13 +623,13 @@ export const clients = pgTable("clients", {
 			foreignColumns: [businessPartners.id],
 			name: "business_partners_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
-	check("clients_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
-	check("clients_is_international_not_null", sql`NOT NULL is_international`),
 	check("clients_created_at_not_null", sql`NOT NULL created_at`),
 	check("clients_created_by_not_null", sql`NOT NULL created_by`),
+	check("clients_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("clients_is_active_not_null", sql`NOT NULL is_active`),
+	check("clients_is_international_not_null", sql`NOT NULL is_international`),
 	check("clients_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("clients_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("clients_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const bpRoles = pgTable("bp_roles", {
@@ -643,14 +643,14 @@ export const bpRoles = pgTable("bp_roles", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("bp_roles_name_unq").on(table.name),
-	check("bp_roles_id_not_null", sql`NOT NULL id`),
-	check("bp_roles_name_not_null", sql`NOT NULL name`),
-	check("bp_roles_description_not_null", sql`NOT NULL description`),
 	check("bp_roles_created_at_not_null", sql`NOT NULL created_at`),
 	check("bp_roles_created_by_not_null", sql`NOT NULL created_by`),
+	check("bp_roles_description_not_null", sql`NOT NULL description`),
+	check("bp_roles_id_not_null", sql`NOT NULL id`),
+	check("bp_roles_is_active_not_null", sql`NOT NULL is_active`),
+	check("bp_roles_name_not_null", sql`NOT NULL name`),
 	check("bp_roles_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("bp_roles_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("bp_roles_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const trucks = pgTable("trucks", {
@@ -670,15 +670,15 @@ export const trucks = pgTable("trucks", {
 			foreignColumns: [carriers.idBusinessPartners],
 			name: "carriers_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
-	check("trucks_id_not_null", sql`NOT NULL id`),
-	check("trucks_id_business_partners_carriers_not_null", sql`NOT NULL id_business_partners_carriers`),
-	check("trucks_license_plate_not_null", sql`NOT NULL license_plate`),
-	check("trucks_payload_capacity_not_null", sql`NOT NULL payload_capacity`),
 	check("trucks_created_at_not_null", sql`NOT NULL created_at`),
 	check("trucks_created_by_not_null", sql`NOT NULL created_by`),
+	check("trucks_id_business_partners_carriers_not_null", sql`NOT NULL id_business_partners_carriers`),
+	check("trucks_id_not_null", sql`NOT NULL id`),
+	check("trucks_is_active_not_null", sql`NOT NULL is_active`),
+	check("trucks_license_plate_not_null", sql`NOT NULL license_plate`),
+	check("trucks_payload_capacity_not_null", sql`NOT NULL payload_capacity`),
 	check("trucks_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("trucks_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("trucks_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const licenseTypes = pgTable("license_types", {
@@ -692,14 +692,14 @@ export const licenseTypes = pgTable("license_types", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("license_types_name_unq").on(table.name),
-	check("license_types_id_not_null", sql`NOT NULL id`),
-	check("license_types_name_not_null", sql`NOT NULL name`),
-	check("license_types_description_not_null", sql`NOT NULL description`),
 	check("license_types_created_at_not_null", sql`NOT NULL created_at`),
 	check("license_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("license_types_description_not_null", sql`NOT NULL description`),
+	check("license_types_id_not_null", sql`NOT NULL id`),
+	check("license_types_is_active_not_null", sql`NOT NULL is_active`),
+	check("license_types_name_not_null", sql`NOT NULL name`),
 	check("license_types_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("license_types_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("license_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const trailers = pgTable("trailers", {
@@ -720,15 +720,15 @@ export const trailers = pgTable("trailers", {
 			name: "carriers_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	unique("trailers_license_plate_unq").on(table.licensePlate),
-	check("trailers_id_not_null", sql`NOT NULL id`),
-	check("trailers_id_business_partners_carriers_not_null", sql`NOT NULL id_business_partners_carriers`),
-	check("trailers_license_plate_not_null", sql`NOT NULL license_plate`),
-	check("trailers_payload_capacity_not_null", sql`NOT NULL payload_capacity`),
 	check("trailers_created_at_not_null", sql`NOT NULL created_at`),
 	check("trailers_created_by_not_null", sql`NOT NULL created_by`),
+	check("trailers_id_business_partners_carriers_not_null", sql`NOT NULL id_business_partners_carriers`),
+	check("trailers_id_not_null", sql`NOT NULL id`),
+	check("trailers_is_active_not_null", sql`NOT NULL is_active`),
+	check("trailers_license_plate_not_null", sql`NOT NULL license_plate`),
+	check("trailers_payload_capacity_not_null", sql`NOT NULL payload_capacity`),
 	check("trailers_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("trailers_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("trailers_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const operations = pgTable("operations", {
@@ -742,17 +742,17 @@ export const operations = pgTable("operations", {
 	updatedBy: integer("updated_by").notNull(),
 	isActive: boolean("is_active").notNull(),
 }, (table) => [
-	unique("operations_name_unq").on(table.name),
 	unique("operations_code_unq").on(table.code),
-	check("operations_id_not_null", sql`NOT NULL id`),
-	check("operations_name_not_null", sql`NOT NULL name`),
+	unique("operations_name_unq").on(table.name),
 	check("operations_code_not_null", sql`NOT NULL code`),
-	check("operations_description_not_null", sql`NOT NULL description`),
 	check("operations_created_at_not_null", sql`NOT NULL created_at`),
 	check("operations_created_by_not_null", sql`NOT NULL created_by`),
+	check("operations_description_not_null", sql`NOT NULL description`),
+	check("operations_id_not_null", sql`NOT NULL id`),
+	check("operations_is_active_not_null", sql`NOT NULL is_active`),
+	check("operations_name_not_null", sql`NOT NULL name`),
 	check("operations_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("operations_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("operations_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const documentTypes = pgTable("document_types", {
@@ -766,17 +766,17 @@ export const documentTypes = pgTable("document_types", {
 	updatedBy: integer("updated_by").notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
-	unique("document_types_name_unq").on(table.name),
 	unique("document_types_code_unq").on(table.code),
-	check("document_types_id_not_null", sql`NOT NULL id`),
+	unique("document_types_name_unq").on(table.name),
 	check("document_types_code_not_null", sql`NOT NULL code`),
-	check("document_types_name_not_null", sql`NOT NULL name`),
-	check("document_types_description_not_null", sql`NOT NULL description`),
 	check("document_types_created_at_not_null", sql`NOT NULL created_at`),
 	check("document_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("document_types_description_not_null", sql`NOT NULL description`),
+	check("document_types_id_not_null", sql`NOT NULL id`),
+	check("document_types_is_active_not_null", sql`NOT NULL is_active`),
+	check("document_types_name_not_null", sql`NOT NULL name`),
 	check("document_types_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("document_types_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("document_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleTicketsDocumentTypes = pgTable("scale_tickets_document_types", {
@@ -796,14 +796,14 @@ export const scaleTicketsDocumentTypes = pgTable("scale_tickets_document_types",
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idDocumentTypes],
-			foreignColumns: [documentTypes.id],
-			name: "document_types_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
 			columns: [table.idBusinessPartners],
 			foreignColumns: [businessPartners.id],
 			name: "business_partners_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idDocumentTypes],
+			foreignColumns: [documentTypes.id],
+			name: "document_types_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
 			columns: [table.idScaleTickets],
@@ -811,20 +811,20 @@ export const scaleTicketsDocumentTypes = pgTable("scale_tickets_document_types",
 			name: "scale_tickets_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	unique("scale_tickets_document_types_id_unq").on(table.idBusinessPartners, table.idDocumentTypes, table.idScaleTickets),
-	check("scale_tickets_document_types_id_not_null", sql`NOT NULL id`),
-	check("scale_tickets_document_types_id_document_types_not_null", sql`NOT NULL id_document_types`),
-	check("scale_tickets_document_types_id_scale_tickets_not_null", sql`NOT NULL id_scale_tickets`),
-	check("scale_tickets_document_types_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
-	check("scale_tickets_document_types_document_serial_not_null", sql`NOT NULL document_serial`),
-	check("scale_tickets_document_types_document_number_not_null", sql`NOT NULL document_number`),
+	check("scale_tickets_document_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("scale_tickets_document_types_created_by_not_null", sql`NOT NULL created_by`),
 	check("scale_tickets_document_types_document_date_not_null", sql`NOT NULL document_date`),
 	check("scale_tickets_document_types_document_gross_weight_not_null", sql`NOT NULL document_gross_weight`),
 	check("scale_tickets_document_types_document_net_weight_not_null", sql`NOT NULL document_net_weight`),
-	check("scale_tickets_document_types_created_at_not_null", sql`NOT NULL created_at`),
-	check("scale_tickets_document_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_tickets_document_types_document_number_not_null", sql`NOT NULL document_number`),
+	check("scale_tickets_document_types_document_serial_not_null", sql`NOT NULL document_serial`),
+	check("scale_tickets_document_types_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("scale_tickets_document_types_id_document_types_not_null", sql`NOT NULL id_document_types`),
+	check("scale_tickets_document_types_id_not_null", sql`NOT NULL id`),
+	check("scale_tickets_document_types_id_scale_tickets_not_null", sql`NOT NULL id_scale_tickets`),
+	check("scale_tickets_document_types_is_active_not_null", sql`NOT NULL is_active`),
 	check("scale_tickets_document_types_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("scale_tickets_document_types_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("scale_tickets_document_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleTickets = pgTable("scale_tickets", {
@@ -853,11 +853,6 @@ export const scaleTickets = pgTable("scale_tickets", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idScaleTicketStatus],
-			foreignColumns: [scaleTicketStatus.id],
-			name: "scale_ticket_status_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
 			columns: [table.idBuyingStations],
 			foreignColumns: [buyingStations.id],
 			name: "buying_stations_fk"
@@ -866,6 +861,26 @@ export const scaleTickets = pgTable("scale_tickets", {
 			columns: [table.idBuyingStationsOrigin],
 			foreignColumns: [buyingStations.id],
 			name: "buying_stations_fk1"
+		}).onUpdate("cascade").onDelete("set null"),
+	foreignKey({
+			columns: [table.idBuyingStationsDestination],
+			foreignColumns: [buyingStations.id],
+			name: "buying_stations_fk2"
+		}).onUpdate("cascade").onDelete("set null"),
+	foreignKey({
+			columns: [table.idBusinessPartnersCarriers],
+			foreignColumns: [carriers.idBusinessPartners],
+			name: "carriers_fk"
+		}).onUpdate("cascade").onDelete("set null"),
+	foreignKey({
+			columns: [table.idBusinessPartnersClients],
+			foreignColumns: [clients.idBusinessPartners],
+			name: "clients_fk"
+		}).onUpdate("cascade").onDelete("set null"),
+	foreignKey({
+			columns: [table.idBusinessPartnersDrivers],
+			foreignColumns: [drivers.idBusinessPartners],
+			name: "drivers_fk"
 		}).onUpdate("cascade").onDelete("set null"),
 	foreignKey({
 			columns: [table.idEmployees],
@@ -878,56 +893,41 @@ export const scaleTickets = pgTable("scale_tickets", {
 			name: "operations_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
-			columns: [table.idBusinessPartnersCarriers],
-			foreignColumns: [carriers.idBusinessPartners],
-			name: "carriers_fk"
-		}).onUpdate("cascade").onDelete("set null"),
-	foreignKey({
-			columns: [table.idBusinessPartnersDrivers],
-			foreignColumns: [drivers.idBusinessPartners],
-			name: "drivers_fk"
-		}).onUpdate("cascade").onDelete("set null"),
-	foreignKey({
-			columns: [table.idBusinessPartnersClients],
-			foreignColumns: [clients.idBusinessPartners],
-			name: "clients_fk"
-		}).onUpdate("cascade").onDelete("set null"),
+			columns: [table.idScaleTicketStatus],
+			foreignColumns: [scaleTicketStatus.id],
+			name: "scale_ticket_status_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
 			columns: [table.idBusinessPartnersSuppliers],
 			foreignColumns: [suppliers.idBusinessPartners],
 			name: "suppliers_fk"
 		}).onUpdate("cascade").onDelete("set null"),
 	foreignKey({
-			columns: [table.idTrucks],
-			foreignColumns: [trucks.id],
-			name: "trucks_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
 			columns: [table.idTrailers],
 			foreignColumns: [trailers.id],
 			name: "trailers_fk"
 		}).onUpdate("cascade").onDelete("set null"),
 	foreignKey({
-			columns: [table.idBuyingStationsDestination],
-			foreignColumns: [buyingStations.id],
-			name: "buying_stations_fk2"
-		}).onUpdate("cascade").onDelete("set null"),
-	check("scale_tickets_id_not_null", sql`NOT NULL id`),
-	check("scale_tickets_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
-	check("scale_tickets_id_employees_not_null", sql`NOT NULL id_employees`),
-	check("scale_tickets_id_operations_not_null", sql`NOT NULL id_operations`),
-	check("scale_tickets_id_trucks_not_null", sql`NOT NULL id_trucks`),
-	check("scale_tickets_id_scale_ticket_status_not_null", sql`NOT NULL id_scale_ticket_status`),
-	check("scale_tickets_creation_date_not_null", sql`NOT NULL creation_date`),
-	check("scale_tickets_total_gross_weight_not_null", sql`NOT NULL total_gross_weight`),
-	check("scale_tickets_total_tare_weight_not_null", sql`NOT NULL total_tare_weight`),
-	check("scale_tickets_total_net_weigth_not_null", sql`NOT NULL total_net_weigth`),
-	check("scale_tickets_total_tare_adjustment_not_null", sql`NOT NULL total_tare_adjustment`),
+			columns: [table.idTrucks],
+			foreignColumns: [trucks.id],
+			name: "trucks_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
 	check("scale_tickets_created_at_not_null", sql`NOT NULL created_at`),
 	check("scale_tickets_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_tickets_creation_date_not_null", sql`NOT NULL creation_date`),
+	check("scale_tickets_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
+	check("scale_tickets_id_employees_not_null", sql`NOT NULL id_employees`),
+	check("scale_tickets_id_not_null", sql`NOT NULL id`),
+	check("scale_tickets_id_operations_not_null", sql`NOT NULL id_operations`),
+	check("scale_tickets_id_scale_ticket_status_not_null", sql`NOT NULL id_scale_ticket_status`),
+	check("scale_tickets_id_trucks_not_null", sql`NOT NULL id_trucks`),
+	check("scale_tickets_is_active_not_null", sql`NOT NULL is_active`),
+	check("scale_tickets_total_gross_weight_not_null", sql`NOT NULL total_gross_weight`),
+	check("scale_tickets_total_net_weigth_not_null", sql`NOT NULL total_net_weigth`),
+	check("scale_tickets_total_tare_adjustment_not_null", sql`NOT NULL total_tare_adjustment`),
+	check("scale_tickets_total_tare_weight_not_null", sql`NOT NULL total_tare_weight`),
 	check("scale_tickets_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("scale_tickets_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("scale_tickets_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleTicketStatus = pgTable("scale_ticket_status", {
@@ -943,15 +943,15 @@ export const scaleTicketStatus = pgTable("scale_ticket_status", {
 }, (table) => [
 	unique("scale_ticket_status_code_unq").on(table.code),
 	unique("scale_ticket_status_name_unq").on(table.name),
-	check("scale_ticket_status_id_not_null", sql`NOT NULL id`),
 	check("scale_ticket_status_code_not_null", sql`NOT NULL code`),
-	check("scale_ticket_status_name_not_null", sql`NOT NULL name`),
-	check("scale_ticket_status_description_not_null", sql`NOT NULL description`),
 	check("scale_ticket_status_created_at_not_null", sql`NOT NULL created_at`),
 	check("scale_ticket_status_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_ticket_status_description_not_null", sql`NOT NULL description`),
+	check("scale_ticket_status_id_not_null", sql`NOT NULL id`),
+	check("scale_ticket_status_is_active_not_null", sql`NOT NULL is_active`),
+	check("scale_ticket_status_name_not_null", sql`NOT NULL name`),
 	check("scale_ticket_status_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("scale_ticket_status_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("scale_ticket_status_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleTicketsDetailsPackagingTypes = pgTable("scale_tickets_details_packaging_types", {
@@ -970,25 +970,25 @@ export const scaleTicketsDetailsPackagingTypes = pgTable("scale_tickets_details_
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idScaleTicketDetails, table.idScaleTicketsScaleTicketDetails, table.idProductsScaleTicketDetails],
-			foreignColumns: [scaleTicketDetails.id, scaleTicketDetails.idScaleTickets, scaleTicketDetails.idProducts],
-			name: "scale_ticket_details_fk"
-		}).onUpdate("cascade").onDelete("set null"),
-	foreignKey({
 			columns: [table.idPackagingTypes],
 			foreignColumns: [packagingTypes.id],
 			name: "packaging_types_fk"
 		}).onUpdate("cascade").onDelete("set null"),
+	foreignKey({
+			columns: [table.idScaleTicketDetails, table.idScaleTicketsScaleTicketDetails, table.idProductsScaleTicketDetails],
+			foreignColumns: [scaleTicketDetails.id, scaleTicketDetails.idScaleTickets, scaleTicketDetails.idProducts],
+			name: "scale_ticket_details_fk"
+		}).onUpdate("cascade").onDelete("set null"),
 	unique("scale_tickets_details_packaging_types_id_unq").on(table.idPackagingTypes, table.idScaleTicketDetails),
-	check("scale_tickets_details_packaging_types_id_not_null", sql`NOT NULL id`),
-	check("scale_tickets_details_packaging_types_package_quantity_not_null", sql`NOT NULL package_quantity`),
 	check("scale_tickets_details_packa_registered_unit_tare_weigh_not_null", sql`NOT NULL registered_unit_tare_weight`),
 	check("scale_tickets_details_packaging_t_subtotal_tare_weight_not_null", sql`NOT NULL subtotal_tare_weight`),
 	check("scale_tickets_details_packaging_types_created_at_not_null", sql`NOT NULL created_at`),
 	check("scale_tickets_details_packaging_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_tickets_details_packaging_types_id_not_null", sql`NOT NULL id`),
+	check("scale_tickets_details_packaging_types_is_active_not_null", sql`NOT NULL is_active`),
+	check("scale_tickets_details_packaging_types_package_quantity_not_null", sql`NOT NULL package_quantity`),
 	check("scale_tickets_details_packaging_types_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("scale_tickets_details_packaging_types_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("scale_tickets_details_packaging_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const usersRoles = pgTable("users_roles", {
@@ -1001,23 +1001,23 @@ export const usersRoles = pgTable("users_roles", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idUsers],
-			foreignColumns: [users.id],
-			name: "users_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	foreignKey({
 			columns: [table.idRoles],
 			foreignColumns: [roles.id],
 			name: "roles_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.idUsers],
+			foreignColumns: [users.id],
+			name: "users_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.idRoles, table.idUsers], name: "users_roles_pk"}),
-	check("users_roles_id_roles_not_null", sql`NOT NULL id_roles`),
-	check("users_roles_id_users_not_null", sql`NOT NULL id_users`),
 	check("users_roles_created_at_not_null", sql`NOT NULL created_at`),
 	check("users_roles_created_by_not_null", sql`NOT NULL created_by`),
+	check("users_roles_id_roles_not_null", sql`NOT NULL id_roles`),
+	check("users_roles_id_users_not_null", sql`NOT NULL id_users`),
+	check("users_roles_is_active_not_null", sql`NOT NULL is_active`),
 	check("users_roles_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("users_roles_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("users_roles_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const rolesPermissions = pgTable("roles_permissions", {
@@ -1030,23 +1030,23 @@ export const rolesPermissions = pgTable("roles_permissions", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idRoles],
-			foreignColumns: [roles.id],
-			name: "roles_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	foreignKey({
 			columns: [table.idPermissions],
 			foreignColumns: [permissions.id],
 			name: "permissions_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.idRoles],
+			foreignColumns: [roles.id],
+			name: "roles_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.idPermissions, table.idRoles], name: "roles_permissions_pk"}),
-	check("roles_permissions_id_permissions_not_null", sql`NOT NULL id_permissions`),
-	check("roles_permissions_id_roles_not_null", sql`NOT NULL id_roles`),
 	check("roles_permissions_created_at_not_null", sql`NOT NULL created_at`),
 	check("roles_permissions_created_by_not_null", sql`NOT NULL created_by`),
+	check("roles_permissions_id_permissions_not_null", sql`NOT NULL id_permissions`),
+	check("roles_permissions_id_roles_not_null", sql`NOT NULL id_roles`),
+	check("roles_permissions_is_active_not_null", sql`NOT NULL is_active`),
 	check("roles_permissions_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("roles_permissions_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("roles_permissions_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const operationsProductTypes = pgTable("operations_product_types", {
@@ -1059,23 +1059,23 @@ export const operationsProductTypes = pgTable("operations_product_types", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idProductTypes],
-			foreignColumns: [productTypes.id],
-			name: "product_types_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	foreignKey({
 			columns: [table.idOperations],
 			foreignColumns: [operations.id],
 			name: "operations_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.idProductTypes],
+			foreignColumns: [productTypes.id],
+			name: "product_types_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.idOperations, table.idProductTypes], name: "operations_product_types_pk"}),
-	check("operations_product_types_id_operations_not_null", sql`NOT NULL id_operations`),
-	check("operations_product_types_id_product_types_not_null", sql`NOT NULL id_product_types`),
 	check("operations_product_types_created_at_not_null", sql`NOT NULL created_at`),
 	check("operations_product_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("operations_product_types_id_operations_not_null", sql`NOT NULL id_operations`),
+	check("operations_product_types_id_product_types_not_null", sql`NOT NULL id_product_types`),
+	check("operations_product_types_is_active_not_null", sql`NOT NULL is_active`),
 	check("operations_product_types_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("operations_product_types_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("operations_product_types_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const buyingStationsSuppliers = pgTable("buying_stations_suppliers", {
@@ -1098,13 +1098,13 @@ export const buyingStationsSuppliers = pgTable("buying_stations_suppliers", {
 			name: "suppliers_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.idBusinessPartnersSuppliers, table.idBuyingStations], name: "buying_stations_suppliers_pk"}),
-	check("buying_stations_suppliers_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
-	check("buying_stations_suppliers_id_business_partners_supplie_not_null", sql`NOT NULL id_business_partners_suppliers`),
 	check("buying_stations_suppliers_created_at_not_null", sql`NOT NULL created_at`),
 	check("buying_stations_suppliers_created_by_not_null", sql`NOT NULL created_by`),
+	check("buying_stations_suppliers_id_business_partners_supplie_not_null", sql`NOT NULL id_business_partners_suppliers`),
+	check("buying_stations_suppliers_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
+	check("buying_stations_suppliers_is_active_not_null", sql`NOT NULL is_active`),
 	check("buying_stations_suppliers_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("buying_stations_suppliers_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("buying_stations_suppliers_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const bpRolesOperations = pgTable("bp_roles_operations", {
@@ -1127,13 +1127,71 @@ export const bpRolesOperations = pgTable("bp_roles_operations", {
 			name: "operations_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.idBpRoles, table.idOperations], name: "bp_roles_operations_pk"}),
-	check("bp_roles_operations_id_operations_not_null", sql`NOT NULL id_operations`),
-	check("bp_roles_operations_id_bp_roles_not_null", sql`NOT NULL id_bp_roles`),
 	check("bp_roles_operations_created_at_not_null", sql`NOT NULL created_at`),
 	check("bp_roles_operations_created_by_not_null", sql`NOT NULL created_by`),
+	check("bp_roles_operations_id_bp_roles_not_null", sql`NOT NULL id_bp_roles`),
+	check("bp_roles_operations_id_operations_not_null", sql`NOT NULL id_operations`),
+	check("bp_roles_operations_is_active_not_null", sql`NOT NULL is_active`),
 	check("bp_roles_operations_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("bp_roles_operations_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("bp_roles_operations_is_active_not_null", sql`NOT NULL is_active`),
+]);
+
+export const operationsBuyingStations = pgTable("operations_buying_stations", {
+	idBuyingStations: integer("id_buying_stations").notNull(),
+	idOperations: integer("id_operations").notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idBuyingStations],
+			foreignColumns: [buyingStations.id],
+			name: "buying_stations_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.idOperations],
+			foreignColumns: [operations.id],
+			name: "operations_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	primaryKey({ columns: [table.idBuyingStations, table.idOperations], name: "operations_buying_stations_pk"}),
+	check("operations_buying_stations_created_at_not_null", sql`NOT NULL created_at`),
+	check("operations_buying_stations_created_by_not_null", sql`NOT NULL created_by`),
+	check("operations_buying_stations_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
+	check("operations_buying_stations_id_operations_not_null", sql`NOT NULL id_operations`),
+	check("operations_buying_stations_is_active_not_null", sql`NOT NULL is_active`),
+	check("operations_buying_stations_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("operations_buying_stations_updated_by_not_null", sql`NOT NULL updated_by`),
+]);
+
+export const operationsDocumentTypes = pgTable("operations_document_types", {
+	idDocumentTypes: integer("id_document_types").notNull(),
+	idOperations: integer("id_operations").notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.idDocumentTypes],
+			foreignColumns: [documentTypes.id],
+			name: "document_types_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.idOperations],
+			foreignColumns: [operations.id],
+			name: "operations_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
+	primaryKey({ columns: [table.idDocumentTypes, table.idOperations], name: "operations_document_types_pk"}),
+	check("operations_document_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("operations_document_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("operations_document_types_id_document_types_not_null", sql`NOT NULL id_document_types`),
+	check("operations_document_types_id_operations_not_null", sql`NOT NULL id_operations`),
+	check("operations_document_types_is_active_not_null", sql`NOT NULL is_active`),
+	check("operations_document_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("operations_document_types_updated_by_not_null", sql`NOT NULL updated_by`),
 ]);
 
 export const employeesBuyingStations = pgTable("employees_buying_stations", {
@@ -1148,24 +1206,24 @@ export const employeesBuyingStations = pgTable("employees_buying_stations", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idEmployees],
-			foreignColumns: [employees.id],
-			name: "employees_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	foreignKey({
 			columns: [table.idBuyingStations],
 			foreignColumns: [buyingStations.id],
 			name: "buying_stations_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.idEmployees],
+			foreignColumns: [employees.id],
+			name: "employees_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.idBuyingStations, table.idEmployees], name: "employees_buying_stations_pk"}),
-	check("employees_buying_stations_id_employees_not_null", sql`NOT NULL id_employees`),
-	check("employees_buying_stations_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
-	check("employees_buying_stations_effective_date_not_null", sql`NOT NULL effective_date`),
 	check("employees_buying_stations_created_at_not_null", sql`NOT NULL created_at`),
 	check("employees_buying_stations_created_by_not_null", sql`NOT NULL created_by`),
+	check("employees_buying_stations_effective_date_not_null", sql`NOT NULL effective_date`),
+	check("employees_buying_stations_id_buying_stations_not_null", sql`NOT NULL id_buying_stations`),
+	check("employees_buying_stations_id_employees_not_null", sql`NOT NULL id_employees`),
+	check("employees_buying_stations_is_active_not_null", sql`NOT NULL is_active`),
 	check("employees_buying_stations_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("employees_buying_stations_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("employees_buying_stations_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const businessPartnersBpRoles = pgTable("business_partners_bp_roles", {
@@ -1180,24 +1238,24 @@ export const businessPartnersBpRoles = pgTable("business_partners_bp_roles", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idBusinessPartners],
-			foreignColumns: [businessPartners.id],
-			name: "business_partners_fk"
-		}).onUpdate("cascade").onDelete("cascade"),
-	foreignKey({
 			columns: [table.idBpRoles],
 			foreignColumns: [bpRoles.id],
 			name: "bp_roles_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.idBusinessPartners],
+			foreignColumns: [businessPartners.id],
+			name: "business_partners_fk"
+		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.idBpRoles, table.idBusinessPartners], name: "business_partners_bp_roles_pk"}),
-	check("business_partners_bp_roles_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
-	check("business_partners_bp_roles_id_bp_roles_not_null", sql`NOT NULL id_bp_roles`),
-	check("business_partners_bp_roles_effective_date_not_null", sql`NOT NULL effective_date`),
 	check("business_partners_bp_roles_created_at_not_null", sql`NOT NULL created_at`),
 	check("business_partners_bp_roles_created_by_not_null", sql`NOT NULL created_by`),
+	check("business_partners_bp_roles_effective_date_not_null", sql`NOT NULL effective_date`),
+	check("business_partners_bp_roles_id_bp_roles_not_null", sql`NOT NULL id_bp_roles`),
+	check("business_partners_bp_roles_id_business_partners_not_null", sql`NOT NULL id_business_partners`),
+	check("business_partners_bp_roles_is_active_not_null", sql`NOT NULL is_active`),
 	check("business_partners_bp_roles_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("business_partners_bp_roles_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("business_partners_bp_roles_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const driversCarriers = pgTable("drivers_carriers", {
@@ -1212,24 +1270,24 @@ export const driversCarriers = pgTable("drivers_carriers", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idBusinessPartnersDrivers],
-			foreignColumns: [drivers.idBusinessPartners],
-			name: "drivers_fk"
-		}).onUpdate("cascade").onDelete("restrict"),
-	foreignKey({
 			columns: [table.idBusinessPartnersCarriers],
 			foreignColumns: [carriers.idBusinessPartners],
 			name: "carriers_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
+	foreignKey({
+			columns: [table.idBusinessPartnersDrivers],
+			foreignColumns: [drivers.idBusinessPartners],
+			name: "drivers_fk"
+		}).onUpdate("cascade").onDelete("restrict"),
 	primaryKey({ columns: [table.idBusinessPartnersCarriers, table.idBusinessPartnersDrivers], name: "drivers_carriers_pk"}),
-	check("drivers_carriers_id_business_partners_drivers_not_null", sql`NOT NULL id_business_partners_drivers`),
-	check("drivers_carriers_id_business_partners_carriers_not_null", sql`NOT NULL id_business_partners_carriers`),
-	check("drivers_carriers_effective_date_not_null", sql`NOT NULL effective_date`),
 	check("drivers_carriers_created_at_not_null", sql`NOT NULL created_at`),
 	check("drivers_carriers_created_by_not_null", sql`NOT NULL created_by`),
+	check("drivers_carriers_effective_date_not_null", sql`NOT NULL effective_date`),
+	check("drivers_carriers_id_business_partners_carriers_not_null", sql`NOT NULL id_business_partners_carriers`),
+	check("drivers_carriers_id_business_partners_drivers_not_null", sql`NOT NULL id_business_partners_drivers`),
+	check("drivers_carriers_is_active_not_null", sql`NOT NULL is_active`),
 	check("drivers_carriers_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("drivers_carriers_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("drivers_carriers_is_active_not_null", sql`NOT NULL is_active`),
 ]);
 
 export const scaleTicketDetails = pgTable("scale_ticket_details", {
@@ -1263,16 +1321,16 @@ export const scaleTicketDetails = pgTable("scale_ticket_details", {
 			name: "scales_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	primaryKey({ columns: [table.id, table.idProducts, table.idScaleTickets], name: "scale_ticket_details_pk"}),
-	check("scale_ticket_details_id_not_null", sql`NOT NULL id`),
-	check("scale_ticket_details_id_scale_tickets_not_null", sql`NOT NULL id_scale_tickets`),
-	check("scale_ticket_details_id_products_not_null", sql`NOT NULL id_products`),
-	check("scale_ticket_details_id_scales_not_null", sql`NOT NULL id_scales`),
-	check("scale_ticket_details_gross_weight_not_null", sql`NOT NULL gross_weight`),
-	check("scale_ticket_details_tare_weight_not_null", sql`NOT NULL tare_weight`),
-	check("scale_ticket_details_net_weight_not_null", sql`NOT NULL net_weight`),
 	check("scale_ticket_details_created_at_not_null", sql`NOT NULL created_at`),
 	check("scale_ticket_details_created_by_not_null", sql`NOT NULL created_by`),
+	check("scale_ticket_details_gross_weight_not_null", sql`NOT NULL gross_weight`),
+	check("scale_ticket_details_id_not_null", sql`NOT NULL id`),
+	check("scale_ticket_details_id_products_not_null", sql`NOT NULL id_products`),
+	check("scale_ticket_details_id_scale_tickets_not_null", sql`NOT NULL id_scale_tickets`),
+	check("scale_ticket_details_id_scales_not_null", sql`NOT NULL id_scales`),
+	check("scale_ticket_details_is_active_not_null", sql`NOT NULL is_active`),
+	check("scale_ticket_details_net_weight_not_null", sql`NOT NULL net_weight`),
+	check("scale_ticket_details_tare_weight_not_null", sql`NOT NULL tare_weight`),
 	check("scale_ticket_details_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("scale_ticket_details_updated_by_not_null", sql`NOT NULL updated_by`),
-	check("scale_ticket_details_is_active_not_null", sql`NOT NULL is_active`),
 ]);

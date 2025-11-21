@@ -23,6 +23,30 @@ export class AuthService {
 
     }
 
+    async validateUser(userId: number) {
+        const userResult = await this.drizzleService.db
+            .select({
+                id: users.id,
+                is_active: users.isActive,
+                email: users.email
+            })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+
+        if (userResult.length === 0) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+
+        const user = userResult[0];
+
+        if (!user.is_active) {
+            throw new ForbiddenException(`Usuario ${user.email} está inactivo`);
+        }
+
+        return user;
+    }
+
     async getTokens(payload: JwtPayload) {
         const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync(
@@ -43,20 +67,79 @@ export class AuthService {
         return { accessToken, refreshToken };
     }
 
-    private getJwtToken(payload: JwtPayload) {
+    // private getJwtToken(payload: JwtPayload) {
 
-        const token = this.jwtService.sign(payload);
-        return token;
-    }
+    //     const token = this.jwtService.sign(payload);
+    //     return token;
+    // }
 
     async updateRefreshTokenHash(userId: number, refreshToken: string) {
         const hash = await bcrypt.hash(refreshToken, 12);
         await this.drizzleService.db
             .update(users)
-            .set({ refreshToken: hash })
+            .set({ 
+                refreshToken: hash,
+                updatedBy: userId,
+             })
             .where(eq(users.id, userId));
     }
 
+    async refreshTokens(userId: number, refreshToken: string) {
+
+        const [user] = await this.drizzleService.db.
+            select(
+                {
+                    id: users.id,
+                    refresh_token: users.refreshToken
+                }
+            )
+            .from(users)
+            .where(and(eq(users.isActive, true), eq(users.id, userId)))
+            .limit(1);
+
+        if (!user || !user.refresh_token || user.refresh_token === "") throw new ForbiddenException("Usuario no autorizado");
+
+        const matches = bcrypt.compareSync(refreshToken, user.refresh_token);
+        if (!matches) throw new ForbiddenException("Refresh Token inválido");
+
+        const tokens = await this.getTokens({ id: user.id });
+        await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
+
+        return tokens;
+    }
+
+    async removeRefreshToken(userId: number) {
+        const result = await this.drizzleService.db.
+            update(users)
+            .set({ 
+                refreshToken: "",
+                updatedBy: userId,
+            })
+            .where(eq(users.id, userId))
+            .returning({
+                id: users.id,
+                email: users.email,
+                username: users.username,
+                refreshToken: users.refreshToken,
+                updatedAt: users.updatedAt,
+            });
+
+        if (result.length === 0) {
+            throw new Error(`La actualización falló. No se pudo cerrar sesión del usuario con id ${userId}.`);
+        }
+        const updatedUser = result[0];
+
+        return {
+            message: "Logout exitoso",
+            user: {
+                id: updatedUser.id,
+                email: updatedUser.email,
+                username: updatedUser.username,
+                refreshToken: updatedUser.refreshToken,
+                updatedAt: updatedUser.updatedAt,
+            }
+        }
+    }
 
     async login(loginUserDto: LoginUserDto) {
 
@@ -67,7 +150,7 @@ export class AuthService {
         // const userQuery = await this.drizzleService.db.
         // execute(
         //     sql`
-        //     SELECT u.id, u.email, u.name, u.password 
+        //     SELECT u.id, u.email, u.name, u.password
         //     FROM users AS u
         //     WHERE u.email = ${email}
         //     AND u.is_active = TRUE
@@ -101,6 +184,8 @@ export class AuthService {
 
         const tokens = await this.getTokens({ id: user.id });
 
+        await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
+
         return {
             ...userWithoutPassword,
             //token: this.getJwtToken({ id: user.id })
@@ -115,7 +200,7 @@ export class AuthService {
 
     //         const result = await this.drizzleService.db.execute(sql
     //             `
-    //             SELECT * FROM get_user_with_roles_permissions(${userId})         
+    //             SELECT * FROM get_user_with_roles_permissions(${userId})
     //             `);
 
 
@@ -163,7 +248,7 @@ export class AuthService {
     }
 
     private validateUserId(userId: number): void {
-    
+
         if (!userId || userId <= 0 || !Number.isInteger(userId)) {
             throw new BadRequestException('ID de usuario inválido');
         }
@@ -193,11 +278,10 @@ export class AuthService {
 
     private async getUserDataFromFunction(userId: number): Promise<UserWithRolesResult | null> {
         try {
-            console.log(userId)
             // Ejecutar la función PostgreSQL
             const result = await this.drizzleService.db.execute(sql
                 `
-                            SELECT * FROM get_user_roles_data(${userId})         
+                            SELECT * FROM get_user_roles_data(${userId})
                             `);
 
             return result.rows[0] as UserWithRolesResult || null;

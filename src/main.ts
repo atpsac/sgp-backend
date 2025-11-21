@@ -10,6 +10,6 @@ async function bootstrap() {
     credentials: true, // Allow cookies to be sent
   });
   //app.use(cookieParser());
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3001);
 }
 bootstrap();
