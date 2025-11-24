@@ -741,7 +741,7 @@ export const operations = pgTable("operations", {
 	createdBy: integer("created_by").notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
 	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	unique("operations_code_unq").on(table.code),
 	unique("operations_name_unq").on(table.name),
@@ -1766,5 +1766,5 @@ export const driversCarriersRelations = relations(driversCarriers, ({one}) => ({
 }));
 
 export const databaseSchema = {
-	users, roles, usersRoles, permissions, rolesPermissions,
+	users, roles, usersRoles, permissions, rolesPermissions, buyingStations, operations, operationsBuyingStations
 };

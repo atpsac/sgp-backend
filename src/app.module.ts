@@ -4,12 +4,15 @@ import * as Joi from 'joi';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 
-import { APP_FILTER } from '@nestjs/core';
 import { AuthService } from './auth/auth.service';
+import { OperationsModule } from './operations/operations.module';
+import { BuyingStationsModule } from './buying-stations/buying-stations.module';
 
 @Module({
   imports: [
     AuthModule,
+    OperationsModule,
+    BuyingStationsModule,
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         POSTGRES_HOST: Joi.string().required(),

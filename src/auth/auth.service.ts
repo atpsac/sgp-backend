@@ -1,4 +1,3 @@
-// src/rbac/rbac.service.ts
 import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { DrizzleService } from '../database/drizzle.service';
 import { eq, sql, and } from 'drizzle-orm';
