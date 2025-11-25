@@ -1,22 +1,22 @@
 import { relations } from "drizzle-orm/relations";
-import { department, employees, gender, identityDocumentTypes, position, users, ubigeos, buyingStations, scales, scaleStatus, scaleTypes, productTypes, products, businessPartners, drivers, licenseTypes, carriers, suppliers, clients, trucks, trailers, scaleTicketsDocumentTypes, documentTypes, scaleTickets, operations, scaleTicketStatus, packagingTypes, scaleTicketsDetailsPackagingTypes, scaleTicketDetails, roles, usersRoles, permissions, rolesPermissions, operationsProductTypes, buyingStationsSuppliers, bpRoles, bpRolesOperations, operationsBuyingStations, operationsDocumentTypes, employeesBuyingStations, businessPartnersBpRoles, driversCarriers } from "./schema";
+import { departments, employees, genders, identityDocumentTypes, positions, users, ubigeos, buyingStations, scales, scaleStatus, scaleTypes, productTypes, products, businessPartners, drivers, licenseTypes, carriers, suppliers, clients, trucks, trailers, scaleTicketsDocumentTypes, documentTypes, scaleTickets, operations, scaleTicketStatus, packagingTypes, scaleTicketsDetailsPackagingTypes, scaleTicketDetails, roles, usersRoles, permissions, rolesPermissions, operationsProductTypes, buyingStationsSuppliers, bpRoles, bpRolesOperations, operationsBuyingStations, operationsDocumentTypes, employeesBuyingStations, businessPartnersBpRoles, driversCarriers } from "./schema";
 
 export const employeesRelations = relations(employees, ({one, many}) => ({
-	department: one(department, {
-		fields: [employees.idDepartment],
-		references: [department.id]
+	department: one(departments, {
+		fields: [employees.idDepartments],
+		references: [departments.id]
 	}),
-	gender: one(gender, {
-		fields: [employees.idGender],
-		references: [gender.id]
+	gender: one(genders, {
+		fields: [employees.idGenders],
+		references: [genders.id]
 	}),
 	identityDocumentType: one(identityDocumentTypes, {
 		fields: [employees.idIdentityDocumentTypes],
 		references: [identityDocumentTypes.id]
 	}),
-	position: one(position, {
-		fields: [employees.idPosition],
-		references: [position.id]
+	position: one(positions, {
+		fields: [employees.idPositions],
+		references: [positions.id]
 	}),
 	user: one(users, {
 		fields: [employees.idUsers],
@@ -26,11 +26,11 @@ export const employeesRelations = relations(employees, ({one, many}) => ({
 	employeesBuyingStations: many(employeesBuyingStations),
 }));
 
-export const departmentRelations = relations(department, ({many}) => ({
+export const departmentsRelations = relations(departments, ({many}) => ({
 	employees: many(employees),
 }));
 
-export const genderRelations = relations(gender, ({many}) => ({
+export const gendersRelations = relations(genders, ({many}) => ({
 	employees: many(employees),
 }));
 
@@ -39,7 +39,7 @@ export const identityDocumentTypesRelations = relations(identityDocumentTypes, (
 	businessPartners: many(businessPartners),
 }));
 
-export const positionRelations = relations(position, ({many}) => ({
+export const positionsRelations = relations(positions, ({many}) => ({
 	employees: many(employees),
 }));
 

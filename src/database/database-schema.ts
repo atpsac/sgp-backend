@@ -21,9 +21,9 @@ export const trucksIdSeq = pgSequence("trucks_id_seq", {  startWith: "1", increm
 export const operationsIdSeq = pgSequence("operations_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
 export const scalesIdSeq = pgSequence("scales_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
 export const identityDocumentTypesIdSeq = pgSequence("identity_document_types_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
-export const departmentIdSeq = pgSequence("department_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
-export const positionIdSeq = pgSequence("position_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
-export const genderIdSeq = pgSequence("gender_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
+export const departmentsIdSeq = pgSequence("departments_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
+export const positionsIdSeq = pgSequence("positions_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
+export const gendersIdSeq = pgSequence("genders_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
 export const productTypesIdSeq = pgSequence("product_types_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
 export const scaleTypesIdSeq = pgSequence("scale_types_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
 export const scaleStatusIdSeq = pgSequence("scale_status_id_seq", {  startWith: "1", increment: "1", minValue: "0", maxValue: "2147483647", cache: "1", cycle: false })
@@ -107,10 +107,10 @@ export const permissions = pgTable("permissions", {
 export const employees = pgTable("employees", {
 	id: integer().default(sql`nextval('employees_id_seq'::regclass)`).primaryKey().notNull(),
 	idIdentityDocumentTypes: integer("id_identity_document_types").notNull(),
-	idGender: integer("id_gender").notNull(),
-	idPosition: integer("id_position").notNull(),
+	idGenders: integer("id_genders").notNull(),
+	idPositions: integer("id_positions").notNull(),
 	idUsers: integer("id_users"),
-	idDepartment: integer("id_department").notNull(),
+	idDepartments: integer("id_departments").notNull(),
 	firstName: varchar("first_name", { length: 50 }).notNull(),
 	fLastname: varchar("f_lastname", { length: 50 }).notNull(),
 	mLastname: varchar("m_lastname", { length: 50 }).notNull(),
@@ -126,14 +126,14 @@ export const employees = pgTable("employees", {
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.idDepartment],
-			foreignColumns: [department.id],
-			name: "department_fk"
+			columns: [table.idDepartments],
+			foreignColumns: [departments.id],
+			name: "departments_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
-			columns: [table.idGender],
-			foreignColumns: [gender.id],
-			name: "gender_fk"
+			columns: [table.idGenders],
+			foreignColumns: [genders.id],
+			name: "genders_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
 			columns: [table.idIdentityDocumentTypes],
@@ -141,9 +141,9 @@ export const employees = pgTable("employees", {
 			name: "identity_document_types_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
-			columns: [table.idPosition],
-			foreignColumns: [position.id],
-			name: "position_fk"
+			columns: [table.idPositions],
+			foreignColumns: [positions.id],
+			name: "positions_fk"
 		}).onUpdate("cascade").onDelete("restrict"),
 	foreignKey({
 			columns: [table.idUsers],
@@ -159,11 +159,11 @@ export const employees = pgTable("employees", {
 	check("employees_document_number_not_null", sql`NOT NULL document_number`),
 	check("employees_f_lastname_not_null", sql`NOT NULL f_lastname`),
 	check("employees_first_name_not_null", sql`NOT NULL first_name`),
-	check("employees_id_department_not_null", sql`NOT NULL id_department`),
-	check("employees_id_gender_not_null", sql`NOT NULL id_gender`),
+	check("employees_id_department_not_null", sql`NOT NULL id_departments`),
+	check("employees_id_gender_not_null", sql`NOT NULL id_genders`),
 	check("employees_id_identity_document_types_not_null", sql`NOT NULL id_identity_document_types`),
 	check("employees_id_not_null", sql`NOT NULL id`),
-	check("employees_id_position_not_null", sql`NOT NULL id_position`),
+	check("employees_id_position_not_null", sql`NOT NULL id_positions`),
 	check("employees_is_active_not_null", sql`NOT NULL is_active`),
 	check("employees_m_lastname_not_null", sql`NOT NULL m_lastname`),
 	check("employees_termination_date_not_null", sql`NOT NULL termination_date`),
@@ -201,6 +201,32 @@ export const buyingStations = pgTable("buying_stations", {
 	check("buying_stations_updated_by_not_null", sql`NOT NULL updated_by`),
 ]);
 
+export const identityDocumentTypes = pgTable("identity_document_types", {
+	id: integer().default(sql`nextval('identity_document_types_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	code: char({ length: 3 }).notNull(),
+	description: varchar({ length: 250 }).notNull(),
+	length: integer().notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("identity_document_types_code_unq").on(table.code),
+	unique("identity_document_types_name_unq").on(table.name),
+	check("identity_document_types_code_not_null", sql`NOT NULL code`),
+	check("identity_document_types_created_at_not_null", sql`NOT NULL created_at`),
+	check("identity_document_types_created_by_not_null", sql`NOT NULL created_by`),
+	check("identity_document_types_description_not_null", sql`NOT NULL description`),
+	check("identity_document_types_id_not_null", sql`NOT NULL id`),
+	check("identity_document_types_is_active_not_null", sql`NOT NULL is_active`),
+	check("identity_document_types_length_not_null", sql`NOT NULL length`),
+	check("identity_document_types_name_not_null", sql`NOT NULL name`),
+	check("identity_document_types_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("identity_document_types_updated_by_not_null", sql`NOT NULL updated_by`),
+]);
+
 export const ubigeos = pgTable("ubigeos", {
 	id: integer().default(sql`nextval('ubigeos_id_seq'::regclass)`).primaryKey().notNull(),
 	code: char({ length: 6 }).notNull(),
@@ -232,34 +258,8 @@ export const ubigeos = pgTable("ubigeos", {
 	check("ubigeos_updated_by_not_null", sql`NOT NULL updated_by`),
 ]);
 
-export const identityDocumentTypes = pgTable("identity_document_types", {
-	id: integer().default(sql`nextval('identity_document_types_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	code: varchar({ length: 10 }).notNull(),
-	description: varchar({ length: 250 }).notNull(),
-	length: integer().notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("identity_document_types_code_unq").on(table.code),
-	unique("identity_document_types_name_unq").on(table.name),
-	check("identity_document_types_code_not_null", sql`NOT NULL code`),
-	check("identity_document_types_created_at_not_null", sql`NOT NULL created_at`),
-	check("identity_document_types_created_by_not_null", sql`NOT NULL created_by`),
-	check("identity_document_types_description_not_null", sql`NOT NULL description`),
-	check("identity_document_types_id_not_null", sql`NOT NULL id`),
-	check("identity_document_types_is_active_not_null", sql`NOT NULL is_active`),
-	check("identity_document_types_length_not_null", sql`NOT NULL length`),
-	check("identity_document_types_name_not_null", sql`NOT NULL name`),
-	check("identity_document_types_updated_at_not_null", sql`NOT NULL updated_at`),
-	check("identity_document_types_updated_by_not_null", sql`NOT NULL updated_by`),
-]);
-
-export const department = pgTable("department", {
-	id: integer().default(sql`nextval('department_id_seq'::regclass)`).primaryKey().notNull(),
+export const departments = pgTable("departments", {
+	id: integer().default(sql`nextval('departments_id_seq'::regclass)`).primaryKey().notNull(),
 	name: varchar({ length: 100 }).notNull(),
 	description: varchar({ length: 255 }).notNull(),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -268,7 +268,7 @@ export const department = pgTable("department", {
 	updatedBy: integer("updated_by").notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
-	unique("department_name_unq").on(table.name),
+	unique("departments_name_unq").on(table.name),
 	check("department_created_at_not_null", sql`NOT NULL created_at`),
 	check("department_created_by_not_null", sql`NOT NULL created_by`),
 	check("department_description_not_null", sql`NOT NULL description`),
@@ -277,48 +277,6 @@ export const department = pgTable("department", {
 	check("department_name_not_null", sql`NOT NULL name`),
 	check("department_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("department_updated_by_not_null", sql`NOT NULL updated_by`),
-]);
-
-export const gender = pgTable("gender", {
-	id: integer().default(sql`nextval('gender_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 50 }).notNull(),
-	description: varchar({ length: 255 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("gender_name_unq").on(table.name),
-	check("gender_created_at_not_null", sql`NOT NULL created_at`),
-	check("gender_created_by_not_null", sql`NOT NULL created_by`),
-	check("gender_description_not_null", sql`NOT NULL description`),
-	check("gender_id_not_null", sql`NOT NULL id`),
-	check("gender_is_active_not_null", sql`NOT NULL is_active`),
-	check("gender_name_not_null", sql`NOT NULL name`),
-	check("gender_updated_at_not_null", sql`NOT NULL updated_at`),
-	check("gender_updated_by_not_null", sql`NOT NULL updated_by`),
-]);
-
-export const position = pgTable("position", {
-	id: integer().default(sql`nextval('position_id_seq'::regclass)`).primaryKey().notNull(),
-	name: varchar({ length: 100 }).notNull(),
-	description: varchar({ length: 255 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	createdBy: integer("created_by").notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-	updatedBy: integer("updated_by").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-}, (table) => [
-	unique("position_name_unq").on(table.name),
-	check("position_created_at_not_null", sql`NOT NULL created_at`),
-	check("position_created_by_not_null", sql`NOT NULL created_by`),
-	check("position_description_not_null", sql`NOT NULL description`),
-	check("position_id_not_null", sql`NOT NULL id`),
-	check("position_is_active_not_null", sql`NOT NULL is_active`),
-	check("position_name_not_null", sql`NOT NULL name`),
-	check("position_updated_at_not_null", sql`NOT NULL updated_at`),
-	check("position_updated_by_not_null", sql`NOT NULL updated_by`),
 ]);
 
 export const productTypes = pgTable("product_types", {
@@ -992,6 +950,48 @@ export const scaleTicketsDetailsPackagingTypes = pgTable("scale_tickets_details_
 	check("scale_tickets_details_packaging_types_updated_by_not_null", sql`NOT NULL updated_by`),
 ]);
 
+export const genders = pgTable("genders", {
+	id: integer().default(sql`nextval('genders_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 50 }).notNull(),
+	description: varchar({ length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("genders_name_unq").on(table.name),
+	check("gender_created_at_not_null", sql`NOT NULL created_at`),
+	check("gender_created_by_not_null", sql`NOT NULL created_by`),
+	check("gender_description_not_null", sql`NOT NULL description`),
+	check("gender_id_not_null", sql`NOT NULL id`),
+	check("gender_is_active_not_null", sql`NOT NULL is_active`),
+	check("gender_name_not_null", sql`NOT NULL name`),
+	check("gender_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("gender_updated_by_not_null", sql`NOT NULL updated_by`),
+]);
+
+export const positions = pgTable("positions", {
+	id: integer().default(sql`nextval('positions_id_seq'::regclass)`).primaryKey().notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	description: varchar({ length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	createdBy: integer("created_by").notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedBy: integer("updated_by").notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
+}, (table) => [
+	unique("positions_name_unq").on(table.name),
+	check("position_created_at_not_null", sql`NOT NULL created_at`),
+	check("position_created_by_not_null", sql`NOT NULL created_by`),
+	check("position_description_not_null", sql`NOT NULL description`),
+	check("position_id_not_null", sql`NOT NULL id`),
+	check("position_is_active_not_null", sql`NOT NULL is_active`),
+	check("position_name_not_null", sql`NOT NULL name`),
+	check("position_updated_at_not_null", sql`NOT NULL updated_at`),
+	check("position_updated_by_not_null", sql`NOT NULL updated_by`),
+]);
+
 export const usersRoles = pgTable("users_roles", {
 	idRoles: integer("id_roles").notNull(),
 	idUsers: integer("id_users").notNull(),
@@ -1335,22 +1335,23 @@ export const scaleTicketDetails = pgTable("scale_ticket_details", {
 	check("scale_ticket_details_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("scale_ticket_details_updated_by_not_null", sql`NOT NULL updated_by`),
 ]);
+
 export const employeesRelations = relations(employees, ({one, many}) => ({
-	department: one(department, {
-		fields: [employees.idDepartment],
-		references: [department.id]
+	department: one(departments, {
+		fields: [employees.idDepartments],
+		references: [departments.id]
 	}),
-	gender: one(gender, {
-		fields: [employees.idGender],
-		references: [gender.id]
+	gender: one(genders, {
+		fields: [employees.idGenders],
+		references: [genders.id]
 	}),
 	identityDocumentType: one(identityDocumentTypes, {
 		fields: [employees.idIdentityDocumentTypes],
 		references: [identityDocumentTypes.id]
 	}),
-	position: one(position, {
-		fields: [employees.idPosition],
-		references: [position.id]
+	position: one(positions, {
+		fields: [employees.idPositions],
+		references: [positions.id]
 	}),
 	user: one(users, {
 		fields: [employees.idUsers],
@@ -1360,11 +1361,11 @@ export const employeesRelations = relations(employees, ({one, many}) => ({
 	employeesBuyingStations: many(employeesBuyingStations),
 }));
 
-export const departmentRelations = relations(department, ({many}) => ({
+export const departmentsRelations = relations(departments, ({many}) => ({
 	employees: many(employees),
 }));
 
-export const genderRelations = relations(gender, ({many}) => ({
+export const gendersRelations = relations(genders, ({many}) => ({
 	employees: many(employees),
 }));
 
@@ -1373,7 +1374,7 @@ export const identityDocumentTypesRelations = relations(identityDocumentTypes, (
 	businessPartners: many(businessPartners),
 }));
 
-export const positionRelations = relations(position, ({many}) => ({
+export const positionsRelations = relations(positions, ({many}) => ({
 	employees: many(employees),
 }));
 
@@ -1766,5 +1767,5 @@ export const driversCarriersRelations = relations(driversCarriers, ({one}) => ({
 }));
 
 export const databaseSchema = {
-	users, roles, usersRoles, permissions, rolesPermissions, buyingStations, operations, operationsBuyingStations
+	users, roles, usersRoles, permissions, rolesPermissions, buyingStations, operations, operationsBuyingStations, employees
 };

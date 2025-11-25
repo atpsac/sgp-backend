@@ -15,6 +15,14 @@ export class AuthController {
 
     @Post('login')
     login(@Body() loginUserDto: LoginUserDto) {
+
+        if (!loginUserDto.email || !loginUserDto.password) {
+            return {
+                success: false,
+                message: 'El campo email y/ password no fueron enviados',
+            }
+        }
+
         return this.authService.login(loginUserDto);
     }
 

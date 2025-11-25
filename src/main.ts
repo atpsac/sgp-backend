@@ -1,32 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import cookieParser from 'cookie-parser';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  // Enable CORS
-  app.enableCors({
-    origin: [
-      'http://localhost:4200',           // Desarrollo local
-      'https://amazonastrading.latamtic.com', // Producción
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'Accept',
-      'Origin',
-      'Access-Control-Request-Method',
-      'Access-Control-Request-Headers',
-    ],
-    exposedHeaders: [
-      'Authorization',
-      'Access-Token',
-      'Refresh-Token',
-    ],
-    credentials: true, // Allow cookies to be sent
-  });
+  const app = await NestFactory.create(AppModule, { cors: false });
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,                // borra campos desconocidos
+      forbidNonWhitelisted: false,    // no lanza error por campos extra
+      skipMissingProperties: false,   // exige obligatorios
+      transform: true,                // convierte tipos (string → number)
+    }),
+  );
+
   //app.use(cookieParser());
   await app.listen(process.env.PORT ?? 3001);
 }

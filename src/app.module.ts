@@ -7,12 +7,15 @@ import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
 import { OperationsModule } from './operations/operations.module';
 import { BuyingStationsModule } from './buying-stations/buying-stations.module';
+import { UsersController } from './users/users.controller';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
     AuthModule,
     OperationsModule,
     BuyingStationsModule,
+    UsersModule,
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         POSTGRES_HOST: Joi.string().required(),

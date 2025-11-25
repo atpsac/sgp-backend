@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { operations, buyingStations, operationsBuyingStations } from "src/database/database-schema";
 import { DrizzleService } from "src/database/drizzle.service";
-import { eq, and } from "drizzle-orm";
+import { eq, and, not } from "drizzle-orm";
 
 @Injectable()
 export class BuyingStationsService {
@@ -33,6 +33,74 @@ export class BuyingStationsService {
                     eq(operationsBuyingStations.isActive, true)
                 )
             );
+    }
+
+    async getNonPrincipalBuyingStations() {
+
+
+        const db = this.drizzleService.db;
+        // 1. Obtener sedes activas excepto la principal
+
+        const stations = await db
+            .select({
+                id: buyingStations.id,
+                name: buyingStations.name,
+                address: buyingStations.address,
+                isPrincipal: buyingStations.isPrincipal,
+            })
+            .from(buyingStations)
+            .where(
+                and(
+                    eq(buyingStations.isActive, true),
+                    not(eq(buyingStations.isPrincipal, true))
+                )
+            );
+
+        // 2. Validación: No existen sedes
+        if (!stations || stations.length === 0) {
+            throw new NotFoundException(
+                'No se encontraron sedes activas que no sean la sede principal.'
+            );
+        }
+
+        return stations;
+
+    }
+
+    async getPrincipalBuyingStations() {
+
+
+        const db = this.drizzleService.db;
+        // 1. Obtener la sede activa principal
+
+        const stations = await db
+            .select({
+                id: buyingStations.id,
+                name: buyingStations.name,
+                address: buyingStations.address,
+                isPrincipal: buyingStations.isPrincipal,
+            })
+            .from(buyingStations)
+            .where(
+                and(
+                    eq(buyingStations.isActive, true),
+                    eq(buyingStations.isPrincipal, true)
+                )
+            )
+            .limit(1);
+
+        const station = stations[0];
+
+        // 2. Validación: No existe sede principal
+        if (!station) {
+            throw new NotFoundException(
+                'No se encontró la sedes activa que sea la principal.'
+            );
+        }
+
+        return station;
+
+
     }
 
 }

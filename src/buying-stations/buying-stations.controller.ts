@@ -19,6 +19,20 @@ export class BuyingStationsController {
         return await this.buyingStationsService.findBuyingStationsByOperation(id);
     }
 
+    @Get("/non-principal")
+    @RoleProtected(ValidRoles.user)
+    @PermissionProtected(ValidPermissions.read)
+    @UseGuards(JwtAccessTokenAuthGuard, UserRolePermissionGuard)
+    async getNonPrincipalBuyingStations() {
+        return await this.buyingStationsService.getNonPrincipalBuyingStations();
+    }
 
+    @Get("/principal")
+    @RoleProtected(ValidRoles.user)
+    @PermissionProtected(ValidPermissions.read)
+    @UseGuards(JwtAccessTokenAuthGuard, UserRolePermissionGuard)
+    async getPrincipalBuyingStations() {
+        return await this.buyingStationsService.getPrincipalBuyingStations();
+    }
 
 }
