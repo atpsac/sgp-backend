@@ -94,7 +94,7 @@ export class BuyingStationsService {
         // 2. Validación: No existe sede principal
         if (!station) {
             throw new NotFoundException(
-                'No se encontró la sedes activa que sea la principal.'
+                'No se encontró la sede activa que sea la principal.'
             );
         }
 

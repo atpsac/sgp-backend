@@ -117,7 +117,7 @@ export const employees = pgTable("employees", {
 	documentNumber: varchar("document_number", { length: 20 }).notNull(),
 	phoneNumber: varchar("phone_number", { length: 15 }),
 	affiliationDate: date("affiliation_date").notNull(),
-	terminationDate: date("termination_date").notNull(),
+	terminationDate: date("termination_date"),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
 	createdBy: integer("created_by").notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -165,7 +165,6 @@ export const employees = pgTable("employees", {
 	check("employees_id_position_not_null", sql`NOT NULL id_positions`),
 	check("employees_is_active_not_null", sql`NOT NULL is_active`),
 	check("employees_m_lastname_not_null", sql`NOT NULL m_lastname`),
-	check("employees_termination_date_not_null", sql`NOT NULL termination_date`),
 	check("employees_updated_at_not_null", sql`NOT NULL updated_at`),
 	check("employees_updated_by_not_null", sql`NOT NULL updated_by`),
 ]);
@@ -1107,7 +1106,7 @@ export const buyingStationsSuppliers = pgTable("buying_stations_suppliers", {
 	check("buying_stations_suppliers_updated_by_not_null", sql`NOT NULL updated_by`),
 ]);
 
-export const bpRolesOperations = pgTable("bp_roles_operations", {
+export const operationsBpRoles = pgTable("operations_bp_roles", {
 	idOperations: integer("id_operations").notNull(),
 	idBpRoles: integer("id_bp_roles").notNull(),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -1126,7 +1125,7 @@ export const bpRolesOperations = pgTable("bp_roles_operations", {
 			foreignColumns: [operations.id],
 			name: "operations_fk"
 		}).onUpdate("cascade").onDelete("cascade"),
-	primaryKey({ columns: [table.idBpRoles, table.idOperations], name: "bp_roles_operations_pk"}),
+	primaryKey({ columns: [table.idBpRoles, table.idOperations], name: "operations_bp_roles_pk"}),
 	check("bp_roles_operations_created_at_not_null", sql`NOT NULL created_at`),
 	check("bp_roles_operations_created_by_not_null", sql`NOT NULL created_by`),
 	check("bp_roles_operations_id_bp_roles_not_null", sql`NOT NULL id_bp_roles`),

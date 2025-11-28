@@ -9,12 +9,14 @@ import { OperationsModule } from './operations/operations.module';
 import { BuyingStationsModule } from './buying-stations/buying-stations.module';
 import { UsersController } from './users/users.controller';
 import { UsersModule } from './users/users.module';
+import { BusinessPartnersModule } from './business-partners/business-partners.module';
 
 @Module({
   imports: [
     AuthModule,
     OperationsModule,
     BuyingStationsModule,
+    BusinessPartnersModule,
     UsersModule,
     ConfigModule.forRoot({
       validationSchema: Joi.object({

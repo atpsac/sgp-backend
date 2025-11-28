@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { departments, employees, genders, identityDocumentTypes, positions, users, ubigeos, buyingStations, scales, scaleStatus, scaleTypes, productTypes, products, businessPartners, drivers, licenseTypes, carriers, suppliers, clients, trucks, trailers, scaleTicketsDocumentTypes, documentTypes, scaleTickets, operations, scaleTicketStatus, packagingTypes, scaleTicketsDetailsPackagingTypes, scaleTicketDetails, roles, usersRoles, permissions, rolesPermissions, operationsProductTypes, buyingStationsSuppliers, bpRoles, bpRolesOperations, operationsBuyingStations, operationsDocumentTypes, employeesBuyingStations, businessPartnersBpRoles, driversCarriers } from "./schema";
+import { departments, employees, genders, identityDocumentTypes, positions, users, ubigeos, buyingStations, scales, scaleStatus, scaleTypes, productTypes, products, businessPartners, drivers, licenseTypes, carriers, suppliers, clients, trucks, trailers, scaleTicketsDocumentTypes, documentTypes, scaleTickets, operations, scaleTicketStatus, packagingTypes, scaleTicketsDetailsPackagingTypes, scaleTicketDetails, roles, usersRoles, permissions, rolesPermissions, operationsProductTypes, buyingStationsSuppliers, bpRoles, operationsBpRoles, operationsBuyingStations, operationsDocumentTypes, employeesBuyingStations, businessPartnersBpRoles, driversCarriers } from "./schema";
 
 export const employeesRelations = relations(employees, ({one, many}) => ({
 	department: one(departments, {
@@ -267,7 +267,7 @@ export const scaleTicketsRelations = relations(scaleTickets, ({one, many}) => ({
 export const operationsRelations = relations(operations, ({many}) => ({
 	scaleTickets: many(scaleTickets),
 	operationsProductTypes: many(operationsProductTypes),
-	bpRolesOperations: many(bpRolesOperations),
+	operationsBpRoles: many(operationsBpRoles),
 	operationsBuyingStations: many(operationsBuyingStations),
 	operationsDocumentTypes: many(operationsDocumentTypes),
 }));
@@ -360,19 +360,19 @@ export const buyingStationsSuppliersRelations = relations(buyingStationsSupplier
 	}),
 }));
 
-export const bpRolesOperationsRelations = relations(bpRolesOperations, ({one}) => ({
+export const operationsBpRolesRelations = relations(operationsBpRoles, ({one}) => ({
 	bpRole: one(bpRoles, {
-		fields: [bpRolesOperations.idBpRoles],
+		fields: [operationsBpRoles.idBpRoles],
 		references: [bpRoles.id]
 	}),
 	operation: one(operations, {
-		fields: [bpRolesOperations.idOperations],
+		fields: [operationsBpRoles.idOperations],
 		references: [operations.id]
 	}),
 }));
 
 export const bpRolesRelations = relations(bpRoles, ({many}) => ({
-	bpRolesOperations: many(bpRolesOperations),
+	operationsBpRoles: many(operationsBpRoles),
 	businessPartnersBpRoles: many(businessPartnersBpRoles),
 }));
 
