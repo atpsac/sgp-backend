@@ -8,6 +8,9 @@ import * as bcrypt from 'bcrypt';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { UserWithRolesResult } from './interfaces/user-with-roles.interface';
 import { ConfigService } from '@nestjs/config';
+import { AuthResponseDto, LogoutResponseDto } from './dto/auth-response.dto';
+import { ApiResponse } from 'src/common/dto/response.dto';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -17,10 +20,6 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private configService: ConfigService,
     ) { }
-
-    async createUser() {
-
-    }
 
     async validateUser(userId: number) {
         const userResult = await this.drizzleService.db
@@ -47,6 +46,8 @@ export class AuthService {
     }
 
     async getTokens(payload: JwtPayload) {
+
+        const jtiRefresh = randomUUID();
         const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync(
                 { sub: payload },
@@ -56,7 +57,10 @@ export class AuthService {
                 },
             ),
             this.jwtService.signAsync(
-                { sub: payload },
+                {
+                    sub: payload,
+                    jti: jtiRefresh,
+                },
                 {
                     secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
                     expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION') || "2m",
@@ -73,22 +77,28 @@ export class AuthService {
     // }
 
     async updateRefreshTokenHash(userId: number, refreshToken: string) {
-        const hash = await bcrypt.hash(refreshToken, 12);
+
+        //const hash = await bcrypt.hash(refreshToken, 12);
+        const hash = bcrypt.hashSync(refreshToken, 12);
+
         await this.drizzleService.db
             .update(users)
-            .set({ 
+            .set({
                 refreshToken: hash,
+                //refreshToken: refreshToken,
                 updatedBy: userId,
-             })
+            })
             .where(eq(users.id, userId));
     }
 
-    async refreshTokens(userId: number, refreshToken: string) {
+    async refreshTokens(userId: number, refreshToken: string): Promise<ApiResponse<AuthResponseDto>> {
 
         const [user] = await this.drizzleService.db.
             select(
                 {
                     id: users.id,
+                    email: users.email,
+                    username: users.username,
                     refresh_token: users.refreshToken
                 }
             )
@@ -98,19 +108,43 @@ export class AuthService {
 
         if (!user || !user.refresh_token || user.refresh_token === "") throw new ForbiddenException("Usuario no autorizado");
 
+
         const matches = bcrypt.compareSync(refreshToken, user.refresh_token);
+
+
+        // let matches = false;
+
+        // if (refreshToken === user.refresh_token) {
+        //     matches = true;
+        // }
+
         if (!matches) throw new ForbiddenException("Refresh Token inválido");
 
         const tokens = await this.getTokens({ id: user.id });
         await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
 
-        return tokens;
+        //return tokens;
+
+        const authResponse: AuthResponseDto = {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            access_token: tokens.accessToken,
+            refresh_token: tokens.refreshToken,
+        };
+
+        // 6. Retornar ApiResponse con éxito
+        return new ApiResponse<AuthResponseDto>(
+            [authResponse], // Envolver en array
+            'Tokens actualizados exitosamente',
+            'success',
+        );
     }
 
-    async removeRefreshToken(userId: number) {
+    async removeRefreshToken(userId: number): Promise<ApiResponse<LogoutResponseDto>> {
         const result = await this.drizzleService.db.
             update(users)
-            .set({ 
+            .set({
                 refreshToken: "",
                 updatedBy: userId,
             })
@@ -119,7 +153,6 @@ export class AuthService {
                 id: users.id,
                 email: users.email,
                 username: users.username,
-                refreshToken: users.refreshToken,
                 updatedAt: users.updatedAt,
             });
 
@@ -128,19 +161,22 @@ export class AuthService {
         }
         const updatedUser = result[0];
 
-        return {
-            message: "Logout exitoso",
-            user: {
-                id: updatedUser.id,
-                email: updatedUser.email,
-                username: updatedUser.username,
-                refreshToken: updatedUser.refreshToken,
-                updatedAt: updatedUser.updatedAt,
-            }
+        const mappedResponse: LogoutResponseDto = {
+            id: updatedUser.id,
+            email: updatedUser.email,
+            username: updatedUser.username,
+            updatedAt: updatedUser.updatedAt,
         }
+
+        return new ApiResponse<LogoutResponseDto>(
+            [mappedResponse],
+            "Logout exitoso",
+            "success",
+        );
+
     }
 
-    async login(loginUserDto: LoginUserDto) {
+    async login(loginUserDto: LoginUserDto): Promise<ApiResponse<AuthResponseDto>> {
 
         const { password, email } = loginUserDto;
 
@@ -185,47 +221,22 @@ export class AuthService {
 
         await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
 
-        return {
+        const mappedResponse: AuthResponseDto = {
             ...userWithoutPassword,
-            //token: this.getJwtToken({ id: user.id })
             access_token: tokens.accessToken,
             refresh_token: tokens.refreshToken,
-        };
+        }
+
+        return new ApiResponse([mappedResponse], "Login exitoso")
+        // return {
+        //     ...userWithoutPassword,
+        //     //token: this.getJwtToken({ id: user.id })
+        //     access_token: tokens.accessToken,
+        //     refresh_token: tokens.refreshToken,
+        // };
 
     }
 
-    // async getUserWithRolesAndPermissions(userId: number) {
-    //     try {
-
-    //         const result = await this.drizzleService.db.execute(sql
-    //             `
-    //             SELECT * FROM get_user_with_roles_permissions(${userId})
-    //             `);
-
-
-    //         if (result.rows.length === 0) {
-    //             throw new NotFoundException(`Usuario con ID ${userId} no encontrado`);
-    //         }
-
-    //         return result.rows[0] as {
-    //             id: number;
-    //             email: string;
-    //             username: string;
-    //             roles: Array<{
-    //                 name: string;
-    //                 permissions: string[];
-    //             }>;
-    //         };
-
-    //     }
-    //     catch (error) {
-    //         console.log(error)
-    //         throw new HttpException(
-    //             'Something went wrong',
-    //             HttpStatus.INTERNAL_SERVER_ERROR,
-    //         );
-    //     }
-    // }
 
     async getUserWithRolesAndPermissions(userId: number): Promise<UserWithRolesResult> {
         // Validación 1: ID válido (en aplicación)
@@ -235,6 +246,37 @@ export class AuthService {
         // Validación 2: Usuario existe y está activo (en aplicación)
         await this.validateUserExistsAndActive(userId);
 
+        //     try {
+
+        //         const result = await this.drizzleService.db.execute(sql
+        //             `
+        //             SELECT * FROM get_user_with_roles_permissions(${userId})
+        //             `);
+
+
+        //         if (result.rows.length === 0) {
+        //             throw new NotFoundException(`Usuario con ID ${userId} no encontrado`);
+        //         }
+
+        //         return result.rows[0] as {
+        //             id: number;
+        //             email: string;
+        //             username: string;
+        //             roles: Array<{
+        //                 name: string;
+        //                 permissions: string[];
+        //             }>;
+        //         };
+
+        //     }
+        //     catch (error) {
+        //         console.log(error)
+        //         throw new HttpException(
+        //             'Something went wrong',
+        //             HttpStatus.INTERNAL_SERVER_ERROR,
+        //         );
+        //     }
+        // }
         // Obtener datos desde la función PostgreSQL
         const result = await this.getUserDataFromFunction(userId);
 
@@ -280,8 +322,8 @@ export class AuthService {
             // Ejecutar la función PostgreSQL
             const result = await this.drizzleService.db.execute(sql
                 `
-                            SELECT * FROM get_user_roles_data(${userId})
-                            `);
+                SELECT * FROM get_user_roles_data(${userId})
+                `);
 
             return result.rows[0] as UserWithRolesResult || null;
 
@@ -291,5 +333,6 @@ export class AuthService {
         }
     }
 
+    // async getUserWithRolesAndPermissions(userId: number) {
 
 }

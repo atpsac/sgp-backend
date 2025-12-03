@@ -7,6 +7,8 @@ import { ValidPermissions, ValidRoles } from './interfaces';
 import { JwtAccessTokenAuthGuard } from "./guards/jwt-auth.guard"
 import { JwtRefreshTokenAuthGuard } from './guards/jwt-refresh.guard';
 import { UserRolePermissionGuard } from './guards/user-role-permission.guard';
+import { ApiResponse } from 'src/common/dto/response.dto';
+import { AuthResponseDto } from './dto/auth-response.dto';
 
 
 @Controller('auth')
@@ -14,15 +16,7 @@ export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
     @Post('login')
-    login(@Body() loginUserDto: LoginUserDto) {
-
-        if (!loginUserDto.email || !loginUserDto.password) {
-            return {
-                success: false,
-                message: 'El campo email y/ password no fueron enviados',
-            }
-        }
-
+    login(@Body() loginUserDto: LoginUserDto):Promise<ApiResponse<AuthResponseDto>> {
         return this.authService.login(loginUserDto);
     }
 
@@ -37,7 +31,7 @@ export class AuthController {
 
     @Post('refresh')
     @UseGuards(JwtRefreshTokenAuthGuard)
-    refresh(@Req() req) {
+    refresh(@Req() req):Promise<ApiResponse<AuthResponseDto>> {
         const { user, refreshToken } = req.user;
         return this.authService.refreshTokens(user.id, refreshToken);
     }

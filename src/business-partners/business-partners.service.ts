@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
-import { bpRoles, businessPartners, businessPartnersBpRoles, operations, operationsBpRoles } from 'drizzle/schema';
+import { bpRoles, businessPartners, businessPartnersBpRoles, carriers, operations, operationsBpRoles } from 'drizzle/schema';
+import { ApiResponse } from 'src/common/dto/response.dto';
+import { OperationBusinessPartnersResponseDto } from './dto/business-partners.dto';
 import { DrizzleService } from 'src/database/drizzle.service';
 
 @Injectable()
@@ -10,7 +12,7 @@ export class BusinessPartnersService {
         private readonly drizzleService: DrizzleService,
     ) { }
 
-    async getBusinessPartnersByOperation(idOperation: number) {
+    async getBusinessPartnersByOperation(idOperation: number) : Promise<ApiResponse<OperationBusinessPartnersResponseDto>> {
         const db = this.drizzleService.db;
         // 1. validar que exista la operación
         const operation = await db.query.operations.findFirst({
@@ -49,13 +51,23 @@ export class BusinessPartnersService {
 
         // 3. normalizar la salida
         if (!result || result.length === 0) {
-            return {
-                message: "No existen Business Partners asociados a esta operación.",
-                data: [],
-            };
+            return new ApiResponse<OperationBusinessPartnersResponseDto>(
+                [],
+                "No existen Business Partners asociados a esta operación.",
+                "success"
+            );
         }
-
-        return { data: result };
+    
+        // 4. Ajustar estructura al DTO final
+        const mapped: OperationBusinessPartnersResponseDto[] = result.map(r => ({
+            id: r.id,
+            companyName: r.companyName,
+        }));
+    
+        return new ApiResponse<OperationBusinessPartnersResponseDto>((mapped),"Listado de socios de negocio por operación");
     }
 
+    
+
 }
+

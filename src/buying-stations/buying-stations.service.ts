@@ -1,7 +1,9 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { operations, buyingStations, operationsBuyingStations } from "src/database/database-schema";
+import { operations, buyingStations, operationsBuyingStations, ubigeos } from "src/database/database-schema";
 import { DrizzleService } from "src/database/drizzle.service";
 import { eq, and, not } from "drizzle-orm";
+import { ApiResponse } from "src/common/dto/response.dto";
+import { BuyingStationsResponseDto } from "./dto/buying-stations-response.dto";
 
 @Injectable()
 export class BuyingStationsService {
@@ -35,11 +37,10 @@ export class BuyingStationsService {
             );
     }
 
-    async getNonPrincipalBuyingStations() {
+    async getNonPrincipalBuyingStations(): Promise<ApiResponse<BuyingStationsResponseDto>> {
 
 
         const db = this.drizzleService.db;
-        // 1. Obtener sedes activas excepto la principal
 
         const stations = await db
             .select({
@@ -47,40 +48,68 @@ export class BuyingStationsService {
                 name: buyingStations.name,
                 address: buyingStations.address,
                 isPrincipal: buyingStations.isPrincipal,
+                ubigeoCode: ubigeos.code,
+                ubigeoRegion: ubigeos.region,
+                ubigeoProvince: ubigeos.province,
+                ubigeoDistrict: ubigeos.district,
+                // Desde la tabla de ubigeos
             })
             .from(buyingStations)
+            .leftJoin(ubigeos, eq(buyingStations.idUbigeos, ubigeos.id))
             .where(
                 and(
                     eq(buyingStations.isActive, true),
-                    not(eq(buyingStations.isPrincipal, true))
+                    eq(buyingStations.isPrincipal, false)
                 )
             );
 
-        // 2. Validación: No existen sedes
-        if (!stations || stations.length === 0) {
-            throw new NotFoundException(
-                'No se encontraron sedes activas que no sean la sede principal.'
+        if (!stations) {
+            return new ApiResponse(
+                [],
+                'No existen sedes principales.',
+                'success'
             );
         }
 
-        return stations;
+        const mappedResponse: BuyingStationsResponseDto[] = stations.map(station => ({
+            id: station.id,
+            name: station.name,
+            address: station.address,
+            isPrincipal: station.isPrincipal,
+            ubigeoCode: station.ubigeoCode || '',
+            ubigeoRegion: station.ubigeoRegion || '',
+            ubigeoProvince: station.ubigeoProvince || '',
+            ubigeoDistrict: station.ubigeoDistrict || '',
+        }));
+
+        return new ApiResponse(
+            mappedResponse,
+            'Sedes no principales obtenidas exitosamente.',
+            'success'
+        );
 
     }
 
-    async getPrincipalBuyingStations() {
+    async getPrincipalBuyingStations(): Promise<ApiResponse<BuyingStationsResponseDto>> {
 
 
         const db = this.drizzleService.db;
         // 1. Obtener la sede activa principal
-
+        
         const stations = await db
             .select({
                 id: buyingStations.id,
                 name: buyingStations.name,
                 address: buyingStations.address,
                 isPrincipal: buyingStations.isPrincipal,
+                ubigeoCode: ubigeos.code,
+                ubigeoRegion: ubigeos.region,
+                ubigeoProvince: ubigeos.province,
+                ubigeoDistrict: ubigeos.district,
+                // Desde la tabla de ubigeos
             })
             .from(buyingStations)
+            .leftJoin(ubigeos, eq(buyingStations.idUbigeos, ubigeos.id)) // LEFT JOIN
             .where(
                 and(
                     eq(buyingStations.isActive, true),
@@ -93,14 +122,31 @@ export class BuyingStationsService {
 
         // 2. Validación: No existe sede principal
         if (!station) {
-            throw new NotFoundException(
-                'No se encontró la sede activa que sea la principal.'
+            return new ApiResponse(
+                [],
+                'No existen sedes principales.',
+                'success'
             );
         }
 
-        return station;
+        // 3. Mapear al DTO
+        const mappedResponse: BuyingStationsResponseDto = {
+            id: station.id,
+            name: station.name,
+            address: station.address,
+            isPrincipal: station.isPrincipal,
+            ubigeoCode: station.ubigeoCode || '',
+            ubigeoRegion: station.ubigeoRegion || '',
+            ubigeoProvince: station.ubigeoProvince || '',
+            ubigeoDistrict: station.ubigeoDistrict || '',
+        };
 
+        // 4. Retornar la respuesta mapeada
+        return new ApiResponse(
+            [mappedResponse],
+            'Sede principal obtenida exitosamente.',
+            'success'
+        );
 
     }
-
 }

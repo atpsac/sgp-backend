@@ -10,13 +10,18 @@ import { BuyingStationsModule } from './buying-stations/buying-stations.module';
 import { UsersController } from './users/users.controller';
 import { UsersModule } from './users/users.module';
 import { BusinessPartnersModule } from './business-partners/business-partners.module';
+import { CarriersModule } from './carriers/carriers.module';
+import { DriversController } from './drivers/drivers.controller';
+import { DriversModule } from './drivers/drivers.module';
 
 @Module({
   imports: [
     AuthModule,
-    OperationsModule,
     BuyingStationsModule,
     BusinessPartnersModule,
+    CarriersModule,
+    DriversModule,
+    OperationsModule,
     UsersModule,
     ConfigModule.forRoot({
       validationSchema: Joi.object({
